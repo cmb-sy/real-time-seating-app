@@ -1,20 +1,4 @@
-# リアルタイム座席管理アプリ（Real-time Seating App）
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/cmb-sys-projects/v0-real-time-seating-app)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/ulTG8hrxt09)
-
-## 📋 概要
-
-このアプリケーションは、施設やオフィスなどの座席状況をリアルタイムで管理・可視化するためのシステムです。利用者は座席の予約、空き状況の確認、座席の利用状況の追跡などができます。
-
-## ✨ 主な機能
-
-- **リアルタイム座席表示**: 現在の座席利用状況をリアルタイムで確認
-- **座席予約**: 利用者が希望の座席を事前に予約可能
-- **IP制限**: 特定のIPアドレスからのみアクセス可能なセキュリティ機能
-- **管理者ダッシュボード**: 座席の利用状況や統計を確認
-
-## 🚀 はじめ方
+## はじめ方
 
 以下の手順で、ローカル環境でプロジェクトを実行できます。
 
