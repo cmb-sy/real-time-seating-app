@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "リアルタイム座席管理アプリ",
   description: "座席の予約とリアルタイム管理のためのアプリケーション",
   generator: "v0.dev",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({
