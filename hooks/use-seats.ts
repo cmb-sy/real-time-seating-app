@@ -20,7 +20,7 @@ export function useSeats() {
 
   // 空席の初期データを生成
   const createEmptySeats = () =>
-    Array.from({ length: 12 }, (_, i) => ({
+    Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,
       name: null,
       is_occupied: false, // スネークケースに変更
@@ -36,7 +36,7 @@ export function useSeats() {
     // 空の座席を一括挿入（パフォーマンス向上）
     await supabase.from("seats").upsert(emptySeats);
 
-    // 密集度を更新
+    // 社内人口密度率を更新
     await supabase.from("settings").upsert({ key: "density", value: 0 });
 
     setSeats(emptySeats);
@@ -77,7 +77,7 @@ export function useSeats() {
         await supabase.from("seats").upsert(initialSeats);
       }
 
-      // 密集度を取得
+      // 社内人口密度率を取得
       const { data: densityData, error: densityError } = await supabase
         .from("settings")
         .select("value")
@@ -86,11 +86,11 @@ export function useSeats() {
 
       if (densityError && densityError.code !== "PGRST116") {
         // PGRST116: 結果がない場合のエラー
-        console.error("密集度の取得に失敗しました:", densityError);
+        console.error("社内人口密度率の取得に失敗しました:", densityError);
       } else {
         setDensityValue(densityData?.value || 0);
 
-        // 密集度データがなければ作成
+        // 社内人口密度率データがなければ作成
         if (!densityData) {
           await supabase.from("settings").upsert({ key: "density", value: 0 });
         }
@@ -216,7 +216,7 @@ export function useSeats() {
     await updateSeat(seatId, { name: null, is_occupied: false });
   };
 
-  // 密集度の更新
+  // 社内人口密度率の更新
   const updateDensity = async (value: number) => {
     const newValue = Math.max(0, Math.min(100, value)); // 0〜100の範囲に制限
 
@@ -226,7 +226,7 @@ export function useSeats() {
       .upsert({ key: "density", value: newValue });
 
     if (error) {
-      console.error("密集度の更新に失敗しました:", error);
+      console.error("社内人口密度率の更新に失敗しました:", error);
     } else {
       setDensityValue(newValue);
     }

@@ -42,10 +42,10 @@ CREATE POLICY "Allow authenticated users to modify settings"
   TO authenticated
   USING (TRUE);
 
--- Initial data for seats (12 empty seats)
+-- Initial data for seats (8 empty seats)
 INSERT INTO public.seats (id, name, is_occupied)
 SELECT i, NULL, FALSE
-FROM generate_series(1, 12) AS i
+FROM generate_series(1, 8) AS i
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert initial density setting

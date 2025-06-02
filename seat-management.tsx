@@ -133,10 +133,18 @@ export default function SeatManagement() {
       <div className="min-h-screen p-4 bg-white">
         {/* 上部エリア: 左右に分かれたヘッダー */}
         <div className="flex justify-between mb-8">
-          {/* 左上：社内密集度の入力エリア */}
+          {/* 左上：日付表示と社内人口密度率の入力エリア */}
           <div className="w-1/4">
+            {/* 今日の日付 */}
+            <div className="text-sm font-medium text-gray-600 mb-2">
+              {new Date().toLocaleDateString("ja-JP", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
             <div className="flex items-center">
-              <span className="text-sm font-medium mr-2">社内密集度:</span>
+              <span className="text-sm font-medium mr-2">社内人口密度率:</span>
               <Input
                 type="number"
                 min="0"
@@ -156,20 +164,20 @@ export default function SeatManagement() {
                 isEveningTime ? "text-orange-600 font-medium" : "text-gray-600"
               }`}
             >
-              21:00に座席状況と社内密集度は自動リセットされます
+              21:00に座席状況と社内人口密度率は自動リセットされます
               {isEveningTime && " (リセット時間帯です)"}
             </div>
             <div className="text-sm text-gray-600 font-medium">
-              着席中: {occupiedCount}/12席
+              着席中: {occupiedCount}/8席
             </div>
           </div>
         </div>
 
         {/* 中央エリア: 座席レイアウト - 縦横中央に配置 */}
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-          <div className="w-full max-w-4xl">
-            {/* 6×2のグリッドレイアウト - 席を大きく */}
-            <div className="grid grid-cols-6 grid-rows-2 gap-6">
+          <div className="w-full max-w-5xl bg-gray-50 p-8 rounded-xl">
+            {/* 4×2のグリッドレイアウト - 席を大きく */}
+            <div className="grid grid-cols-4 grid-rows-2 gap-10 mx-auto">
               {seats.map((seat) => (
                 <div key={seat.id} className="relative">
                   {editingSeat === seat.id ? (
@@ -179,35 +187,35 @@ export default function SeatManagement() {
                       onKeyDown={(e) => handleKeyPress(e, seat.id)}
                       onBlur={() => handleNameConfirm(seat.id)}
                       placeholder="名前"
-                      className="h-24 text-center text-sm"
+                      className="h-40 text-center text-lg"
                       autoFocus
                     />
                   ) : (
                     <Button
                       variant={seat.is_occupied ? "default" : "outline"}
                       className={`
-                      h-24 w-full flex flex-col items-center justify-center p-2
+                      h-40 w-full flex flex-col items-center justify-center p-4
                       ${
                         seat.is_occupied
                           ? "bg-blue-500 hover:bg-blue-600 text-white"
                           : "hover:bg-gray-100"
                       }
-                      transition-all duration-200
+                      transition-all duration-200 rounded-lg shadow-sm
                     `}
                       onClick={() => handleSeatClick(seat.id)}
                     >
-                      <div className="font-medium text-xs mb-1">
+                      <div className="font-medium text-base mb-2">
                         席{seat.id}
                       </div>
-                      <div className="flex items-center justify-center mb-1">
+                      <div className="flex items-center justify-center mb-3">
                         {seat.is_occupied ? (
-                          <User className="h-4 w-4" />
+                          <User className="h-7 w-7" />
                         ) : (
-                          <UserX className="h-4 w-4" />
+                          <UserX className="h-7 w-7" />
                         )}
                       </div>
                       {seat.is_occupied && seat.name && (
-                        <div className="text-sm w-full text-center break-all line-clamp-2">
+                        <div className="text-lg w-full text-center break-all line-clamp-2">
                           {seat.name}
                         </div>
                       )}
@@ -215,6 +223,12 @@ export default function SeatManagement() {
                   )}
                 </div>
               ))}
+            </div>
+            {/* 入り口側の表示 - 画面下部に配置 */}
+            <div className="mt-8 text-center">
+              <div className="inline-block border border-gray-400 rounded px-8 py-2 text-gray-600 font-medium">
+                入り口側
+              </div>
             </div>
           </div>
         </div>
