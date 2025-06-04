@@ -139,10 +139,13 @@ export function useSeats() {
   // 座席の更新
   const updateSeat = async (seatId: number, updates: Partial<Seat>) => {
     try {
+      console.log(`座席 ID ${seatId} の更新を開始:`, updates);
       setError(null);
       const seat = seats.find((s) => s.id === seatId);
       if (!seat) {
-        setError(`座席ID ${seatId} が見つかりません`);
+        const errorMessage = `座席ID ${seatId} が見つかりません`;
+        console.error(errorMessage);
+        setError(errorMessage);
         return;
       }
 
@@ -154,12 +157,17 @@ export function useSeats() {
         ...updates,
         updated_date: timeString,
       };
+      console.log(`更新後の座席データ:`, updatedSeat);
 
       const { error } = await supabase.from("seats").upsert(updatedSeat);
       if (error) {
-        setError(`座席の更新に失敗しました: ${error.message}`);
+        const errorMessage = `座席の更新に失敗しました: ${error.message}`;
+        console.error(errorMessage, error);
+        setError(errorMessage);
         throw error;
       }
+
+      console.log(`座席 ID ${seatId} の更新成功`);
 
       // ローカルステートを即時更新
       setSeats((prevSeats) =>
@@ -167,20 +175,58 @@ export function useSeats() {
       );
     } catch (e) {
       if (e instanceof Error) {
-        setError(`エラー: ${e.message}`);
+        const errorMessage = `エラー: ${e.message}`;
+        console.error(errorMessage, e);
+        setError(errorMessage);
       } else {
-        setError("予期せぬエラーが発生しました");
+        const errorMessage = "予期せぬエラーが発生しました";
+        console.error(errorMessage, e);
+        setError(errorMessage);
       }
     }
   };
 
-  const occupySeat = useCallback(async (seatId: number, name: string) => {
-    await updateSeat(seatId, { name, is_occupied: true });
-  }, []);
+  const occupySeat = useCallback(
+    async (seatId: number, name: string) => {
+      console.log(`occupySeat: 座席 ${seatId} を ${name} さんが着席します`);
+      try {
+        await updateSeat(seatId, { name, is_occupied: true });
+        console.log(`occupySeat: 座席 ${seatId} の着席成功`);
+      } catch (error) {
+        console.error(`occupySeat: 座席 ${seatId} の着席に失敗:`, error);
+        throw error;
+      }
+    },
+    [updateSeat]
+  );
 
-  const releaseSeat = useCallback(async (seatId: number) => {
-    await updateSeat(seatId, { name: null, is_occupied: false });
-  }, []);
+  const releaseSeat = useCallback(
+    async (seatId: number) => {
+      console.log(`releaseSeat: 座席 ${seatId} から退席します`);
+      try {
+        await updateSeat(seatId, { name: null, is_occupied: false });
+        console.log(`releaseSeat: 座席 ${seatId} の退席成功`);
+      } catch (error) {
+        console.error(`releaseSeat: 座席 ${seatId} の退席に失敗:`, error);
+        throw error;
+      }
+    },
+    [updateSeat]
+  );
+
+  const updateName = useCallback(
+    async (seatId: number, name: string) => {
+      console.log(`updateName: 座席 ${seatId} の名前を "${name}" に更新します`);
+      try {
+        await updateSeat(seatId, { name });
+        console.log(`updateName: 座席 ${seatId} の名前更新成功`);
+      } catch (error) {
+        console.error(`updateName: 座席 ${seatId} の名前更新失敗:`, error);
+        throw error;
+      }
+    },
+    [updateSeat]
+  );
 
   const updateDensity = async (value: number) => {
     const newValue = Math.max(0, Math.min(100, value));
@@ -201,6 +247,7 @@ export function useSeats() {
     error,
     occupySeat,
     releaseSeat,
+    updateName,
     updateDensity,
   };
 }
