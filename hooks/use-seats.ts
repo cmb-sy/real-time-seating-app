@@ -17,51 +17,22 @@ export function useSeats() {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [densityValue, setDensityValue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [lastResetTime, setLastResetTime] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // 空席の初期データを生成
+  // 空席の初期データを生成（初期データのみ使用）
   const createEmptySeats = () =>
     Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,
       name: null,
-      is_occupied: false, // スネークケースに変更
-      updated_date: new Date().toTimeString().split(" ")[0], // "HH:MM:SS"形式
+      is_occupied: false,
+      updated_date: new Date().toTimeString().split(" ")[0],
     }));
-
-  // 全ての座席と密集度をリセットする関数
-  const resetAllSeats = async () => {
-    const emptySeats = createEmptySeats();
-
-    // Supabaseのテーブルを更新
-    await supabase.from("seats").delete().neq("id", 0); // 全てのレコードを削除
-
-    // 空の座席を一括挿入（パフォーマンス向上）
-    await supabase.from("seats").upsert(emptySeats);
-
-    // 社内人口密度率を更新
-    await supabase.from("settings").upsert({ key: "density", value: 0 });
-
-    setSeats(emptySeats);
-    setDensityValue(0);
-  };
-
-  // 21時にリセットする関数
-  const resetSeatsAt21 = async () => {
-    if (isAfter21()) {
-      const now = new Date();
-      // 前回のリセットが今日でない場合のみリセット
-      if (!lastResetTime || lastResetTime.getDate() !== now.getDate()) {
-        await resetAllSeats();
-        setLastResetTime(now);
-      }
-    }
-  };
 
   // Supabaseからデータを取得
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // 座席データと社内人口密度率を並列で取得（パフォーマンス向上）
+        // 座席データと社内人口密度率を並列で取得
         const [seatsResponse, densityResponse] = await Promise.all([
           supabase.from("seats").select("*").order("id"),
           supabase
@@ -89,14 +60,12 @@ export function useSeats() {
           densityResponse.error &&
           densityResponse.error.code !== "PGRST116"
         ) {
-          // PGRST116: 結果がない場合のエラー
           console.error(
             "社内人口密度率の取得に失敗しました:",
             densityResponse.error
           );
         } else {
           setDensityValue(densityResponse.data?.value || 0);
-          // 社内人口密度率データがなければ作成
           if (!densityResponse.data) {
             await supabase
               .from("settings")
@@ -113,18 +82,13 @@ export function useSeats() {
     // 初期データを取得
     fetchInitialData();
 
-    // 初回とその後1分ごとに21時リセットをチェック
-    resetSeatsAt21();
-    const intervalId = setInterval(resetSeatsAt21, 60000); // 1分ごとにチェック
-
-    // リアルタイムサブスクリプションを設定（座席情報）- 最適化
+    // リアルタイムサブスクリプションを設定（座席情報）
     const seatsSubscription = supabase
       .channel("seats-channel")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "seats" },
         (payload) => {
-          // ペイロードに基づいて座席データを更新（ネットワークリクエストなし）
           if (
             payload.eventType === "INSERT" ||
             payload.eventType === "UPDATE"
@@ -145,7 +109,7 @@ export function useSeats() {
       )
       .subscribe();
 
-    // リアルタイムサブスクリプションを設定（密集度）- 最適化
+    // リアルタイムサブスクリプションを設定（密集度）
     const densitySubscription = supabase
       .channel("density-channel")
       .on(
@@ -161,7 +125,6 @@ export function useSeats() {
             payload.eventType === "INSERT" ||
             payload.eventType === "UPDATE"
           ) {
-            // ペイロードから直接値を取得
             const newSettings = payload.new as { key: string; value: number };
             if (newSettings && newSettings.key === "density") {
               setDensityValue(newSettings.value);
@@ -173,50 +136,34 @@ export function useSeats() {
 
     // クリーンアップ関数
     return () => {
-      clearInterval(intervalId);
       supabase.removeChannel(seatsSubscription);
       supabase.removeChannel(densitySubscription);
     };
-  }, [lastResetTime]);
+  }, []);
 
   // 座席の更新
-  // 更新エラーを管理するための状態
-  const [error, setError] = useState<string | null>(null);
-
   const updateSeat = async (seatId: number, updates: Partial<Seat>) => {
     try {
       setError(null);
-      // 検索を高速化 - findIndex は O(n) の計算量
       const seat = seats.find((s) => s.id === seatId);
       if (!seat) {
         setError(`座席ID ${seatId} が見つかりません`);
         return;
       }
-      const seatIndex = seats.indexOf(seat); // 見つかったオブジェクトのインデックスを取得
 
-      // 更新時間を追加 (time型のカラムなのでHH:MM:SSの形式にする)
       const now = new Date();
-      const timeString = now.toTimeString().split(" ")[0]; // "HH:MM:SS"形式
+      const timeString = now.toTimeString().split(" ")[0];
       const updatedSeat = {
-        ...seats[seatIndex],
+        ...seat,
         ...updates,
         updated_date: timeString,
       };
 
-      // Supabaseデータを更新
-      const { data, error } = await supabase.from("seats").upsert(updatedSeat);
-
+      const { error } = await supabase.from("seats").upsert(updatedSeat);
       if (error) {
         setError(`座席の更新に失敗しました: ${error.message}`);
         throw error;
       }
-
-      // ローカルステートも更新して即時反映
-      setSeats((prevSeats) =>
-        prevSeats.map((seat) =>
-          seat.id === seatId ? { ...seat, ...updates } : seat
-        )
-      );
     } catch (e) {
       if (e instanceof Error) {
         setError(`エラー: ${e.message}`);
@@ -226,25 +173,19 @@ export function useSeats() {
     }
   };
 
-  // 座席の占有 - useCallback を使用してメモ化（不必要な再レンダリングを防止）
   const occupySeat = useCallback(async (seatId: number, name: string) => {
     await updateSeat(seatId, { name, is_occupied: true });
   }, []);
 
-  // 座席の解放 - useCallback を使用してメモ化
   const releaseSeat = useCallback(async (seatId: number) => {
     await updateSeat(seatId, { name: null, is_occupied: false });
   }, []);
 
-  // 社内人口密度率の更新
   const updateDensity = async (value: number) => {
-    const newValue = Math.max(0, Math.min(100, value)); // 0〜100の範囲に制限
-
-    // Supabaseに更新を保存
+    const newValue = Math.max(0, Math.min(100, value));
     const { error } = await supabase
       .from("settings")
       .upsert({ key: "density", value: newValue });
-
     if (error) {
       console.error("社内人口密度率の更新に失敗しました:", error);
     } else {
@@ -260,6 +201,5 @@ export function useSeats() {
     occupySeat,
     releaseSeat,
     updateDensity,
-    resetAllSeats,
   };
 }
