@@ -185,7 +185,7 @@ export default function SeatManagement() {
                     onKeyDown={(e) => handleKeyPress(e, seat.id)}
                     onBlur={() => handleNameConfirm(seat.id)}
                     placeholder="名前"
-                    className="h-40 text-center text-lg"
+                    className="h-40 text-center text-xl"
                     autoFocus
                   />
                 ) : (
@@ -193,37 +193,39 @@ export default function SeatManagement() {
                     id={`seat-${seat.id}`}
                     variant={seat.is_occupied ? "default" : "outline"}
                     className={`
-                        h-40 w-full flex flex-col items-center ${
-                          seat.is_occupied ? "justify-start" : "justify-center"
-                        } p-4 pb-8 relative
+                        h-40 w-full flex flex-col items-center justify-center relative
                         ${
                           seat.is_occupied
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "hover:bg-gray-100"
+                            ? "bg-blue-500 hover:bg-blue-600 text-white p-4 pb-8"
+                            : "hover:bg-gray-100 border border-gray-300 p-4"
                         }
-                        transition-all duration-200 rounded-lg shadow-sm
+                        transition-all duration-150 rounded-lg shadow-sm
                       `}
                     onClick={() => handleSeatClick(seat.id)}
                   >
                     <div
-                      className={`font-medium text-base ${
-                        seat.is_occupied ? "mb-2" : "mb-4"
+                      className={`flex items-center justify-center ${
+                        seat.is_occupied ? "mb-2" : ""
                       }`}
+                      style={{
+                        marginTop: seat.is_occupied ? "0" : "auto",
+                        marginBottom: seat.is_occupied ? "0" : "auto",
+                      }}
                     >
-                      席{seat.id}
-                    </div>
-                    <div className="flex items-center justify-center mb-3">
+                      <span className="font-medium text-base mr-2">
+                        席{seat.id}
+                      </span>
                       {seat.is_occupied ? (
-                        <User className="h-7 w-7" />
+                        <User className="h-5 w-5" />
                       ) : (
-                        <UserX className="h-7 w-7" />
+                        <UserX className="h-5 w-5" />
                       )}
                     </div>
                     {seat.is_occupied && seat.name && (
                       <div
-                        className="text-lg w-full px-1 text-center break-words overflow-hidden mb-3"
+                        className="text-4xl font-medium w-full px-1 text-center break-words overflow-hidden mb-3"
                         style={{
-                          maxHeight: "3.6rem",
+                          maxHeight: "4rem",
                           display: "-webkit-box",
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: "vertical",
@@ -314,7 +316,11 @@ export default function SeatManagement() {
                   >
                     名前を編集
                   </Button>
-                  <Button variant="destructive" onClick={handleConfirmLeave}>
+                  <Button
+                    variant="outline"
+                    onClick={handleConfirmLeave}
+                    className="bg-red-50 hover:bg-red-100"
+                  >
                     退席する
                   </Button>
                   <Button
