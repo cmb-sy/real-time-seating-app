@@ -139,7 +139,6 @@ export function useSeats() {
   // 座席の更新
   const updateSeat = async (seatId: number, updates: Partial<Seat>) => {
     try {
-      console.log(`座席 ID ${seatId} の更新を開始:`, updates);
       setError(null);
       const seat = seats.find((s) => s.id === seatId);
       if (!seat) {
@@ -157,7 +156,6 @@ export function useSeats() {
         ...updates,
         updated_date: timeString,
       };
-      console.log(`更新後の座席データ:`, updatedSeat);
 
       const { error } = await supabase.from("seats").upsert(updatedSeat);
       if (error) {
@@ -166,8 +164,6 @@ export function useSeats() {
         setError(errorMessage);
         throw error;
       }
-
-      console.log(`座席 ID ${seatId} の更新成功`);
 
       // ローカルステートを即時更新
       setSeats((prevSeats) =>
@@ -188,10 +184,9 @@ export function useSeats() {
 
   const occupySeat = useCallback(
     async (seatId: number, name: string) => {
-      console.log(`occupySeat: 座席 ${seatId} を ${name} さんが着席します`);
+      `occupySeat: 座席 ${seatId} を ${name} さんが着席します`;
       try {
         await updateSeat(seatId, { name, is_occupied: true });
-        console.log(`occupySeat: 座席 ${seatId} の着席成功`);
       } catch (error) {
         console.error(`occupySeat: 座席 ${seatId} の着席に失敗:`, error);
         throw error;
@@ -202,10 +197,8 @@ export function useSeats() {
 
   const releaseSeat = useCallback(
     async (seatId: number) => {
-      console.log(`releaseSeat: 座席 ${seatId} から退席します`);
       try {
         await updateSeat(seatId, { name: null, is_occupied: false });
-        console.log(`releaseSeat: 座席 ${seatId} の退席成功`);
       } catch (error) {
         console.error(`releaseSeat: 座席 ${seatId} の退席に失敗:`, error);
         throw error;
@@ -216,10 +209,8 @@ export function useSeats() {
 
   const updateName = useCallback(
     async (seatId: number, name: string) => {
-      console.log(`updateName: 座席 ${seatId} の名前を "${name}" に更新します`);
       try {
         await updateSeat(seatId, { name });
-        console.log(`updateName: 座席 ${seatId} の名前更新成功`);
       } catch (error) {
         console.error(`updateName: 座席 ${seatId} の名前更新失敗:`, error);
         throw error;
