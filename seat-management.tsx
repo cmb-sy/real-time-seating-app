@@ -45,10 +45,6 @@ export default function SeatManagement() {
     releaseSeat,
     updateDensity,
   } = useSeats();
-
-  // クラッカーアニメーションのみ使用
-
-  // クラッカーアニメーション
   const { triggerConfetti } = useConfetti();
 
   const [editingSeat, setEditingSeat] = useState<number | null>(null);
@@ -111,21 +107,7 @@ export default function SeatManagement() {
     setConfirmingSeat(null);
   };
 
-  // 現在時刻が21時以降かどうか
-  const [isEveningTime, setIsEveningTime] = useState(false);
-
-  // 現在時刻を確認
-  useEffect(() => {
-    const checkTime = () => {
-      const now = new Date();
-      setIsEveningTime(now.getHours() >= 21);
-    };
-
-    checkTime();
-    const timeInterval = setInterval(checkTime, 60000); // 1分ごとに確認
-
-    return () => clearInterval(timeInterval);
-  }, []);
+  // 夕方の時間チェックをuseSeatsフックに移動（コンポーネント内での状態管理を減らす）
 
   // ローディング中はローディング表示
   if (loading) {

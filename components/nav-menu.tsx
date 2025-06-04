@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, Info, HelpCircle, ChevronRight, X } from "lucide-react";
+import { Menu } from "lucide-react";
 
 export function NavMenu() {
   const [open, setOpen] = useState(false);
@@ -38,7 +37,8 @@ export function NavMenu() {
               <span>当サービスについて</span>
             </Button>
           </Link>
-          <Link href="/contact" onClick={() => setOpen(false)}>
+
+          <Link href="/future-develop" onClick={() => setOpen(false)}>
             <Button
               variant="ghost"
               className="w-full justify-start text-left"
@@ -47,13 +47,13 @@ export function NavMenu() {
               <span>今後の実装予定</span>
             </Button>
           </Link>
-          <Link href="/future-develop" onClick={() => setOpen(false)}>
+          <Link href="/contact" onClick={() => setOpen(false)}>
             <Button
               variant="ghost"
               className="w-full justify-start text-left"
               size="lg"
             >
-              <span>お問い合わせ</span>
+              <span>機能改善のご要望(まだ使えないです)</span>
             </Button>
           </Link>
         </nav>

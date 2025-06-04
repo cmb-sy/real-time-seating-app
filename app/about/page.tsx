@@ -21,9 +21,13 @@ export default function AboutPage() {
           </Link>
         </div>
 
+        <h1 className="text-3xl font-bold mb-6">当サービスについて</h1>
+
         <div className="space-y-6 text-gray-700">
           <section className="p-6 rounded-lg">
-            <p>書くからちょっと待って</p>
+            <p>21:00に情報は全てリセットされます。</p>
+            <br />
+            <p>書くからちょっと待って...</p>
           </section>
         </div>
       </div>

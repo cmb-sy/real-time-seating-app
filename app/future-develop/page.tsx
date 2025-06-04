@@ -25,12 +25,9 @@ export default function ContactPage() {
 
         <div className="space-y-6 text-gray-700">
           <section className="bg-gray-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-3">今後の実装予定</h2>
             <ul className="list-disc list-inside space-y-2">
-              <li>
-                混雑具合、社内人口密度率をデータベースで管理し、混雑具合、社内人口密度率の予測機能
-              </li>
-              <li>ダークモード対応</li>
+              <li>混雑具合と社内人口密度率の予測機能</li>
+              <li>投げ銭させる機能（冗談）</li>
             </ul>
           </section>
         </div>

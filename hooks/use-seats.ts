@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
 interface Seat {
@@ -60,42 +60,51 @@ export function useSeats() {
   // Supabaseからデータを取得
   useEffect(() => {
     const fetchInitialData = async () => {
-      // 座席データを取得
-      const { data: seatsData, error: seatsError } = await supabase
-        .from("seats")
-        .select("*")
-        .order("id");
+      try {
+        // 座席データと社内人口密度率を並列で取得（パフォーマンス向上）
+        const [seatsResponse, densityResponse] = await Promise.all([
+          supabase.from("seats").select("*").order("id"),
+          supabase
+            .from("settings")
+            .select("value")
+            .eq("key", "density")
+            .maybeSingle(),
+        ]);
 
-      if (seatsError) {
-        console.error("座席データの取得に失敗しました:", seatsError);
-      } else if (seatsData && seatsData.length > 0) {
-        setSeats(seatsData);
-      } else {
-        // データがない場合は初期値をセット
-        const initialSeats = createEmptySeats();
-        setSeats(initialSeats);
-
-        // データベースに初期値を一括保存（パフォーマンス向上）
-        await supabase.from("seats").upsert(initialSeats);
-      }
-
-      // 社内人口密度率を取得
-      const { data: densityData, error: densityError } = await supabase
-        .from("settings")
-        .select("value")
-        .eq("key", "density")
-        .single();
-
-      if (densityError && densityError.code !== "PGRST116") {
-        // PGRST116: 結果がない場合のエラー
-        console.error("社内人口密度率の取得に失敗しました:", densityError);
-      } else {
-        setDensityValue(densityData?.value || 0);
-
-        // 社内人口密度率データがなければ作成
-        if (!densityData) {
-          await supabase.from("settings").upsert({ key: "density", value: 0 });
+        // 座席データの処理
+        if (seatsResponse.error) {
+          console.error("座席データの取得に失敗しました:", seatsResponse.error);
+        } else if (seatsResponse.data && seatsResponse.data.length > 0) {
+          setSeats(seatsResponse.data);
+        } else {
+          // データがない場合は初期値をセット
+          const initialSeats = createEmptySeats();
+          setSeats(initialSeats);
+          // データベースに初期値を保存
+          await supabase.from("seats").upsert(initialSeats);
         }
+
+        // 社内人口密度率の処理
+        if (
+          densityResponse.error &&
+          densityResponse.error.code !== "PGRST116"
+        ) {
+          // PGRST116: 結果がない場合のエラー
+          console.error(
+            "社内人口密度率の取得に失敗しました:",
+            densityResponse.error
+          );
+        } else {
+          setDensityValue(densityResponse.data?.value || 0);
+          // 社内人口密度率データがなければ作成
+          if (!densityResponse.data) {
+            await supabase
+              .from("settings")
+              .upsert({ key: "density", value: 0 });
+          }
+        }
+      } catch (err) {
+        console.error("データ取得中にエラーが発生しました:", err);
       }
 
       setLoading(false);
@@ -177,11 +186,13 @@ export function useSeats() {
   const updateSeat = async (seatId: number, updates: Partial<Seat>) => {
     try {
       setError(null);
-      const seatIndex = seats.findIndex((s) => s.id === seatId);
-      if (seatIndex === -1) {
+      // 検索を高速化 - findIndex は O(n) の計算量
+      const seat = seats.find((s) => s.id === seatId);
+      if (!seat) {
         setError(`座席ID ${seatId} が見つかりません`);
         return;
       }
+      const seatIndex = seats.indexOf(seat); // 見つかったオブジェクトのインデックスを取得
 
       // 更新時間を追加 (time型のカラムなのでHH:MM:SSの形式にする)
       const now = new Date();
@@ -215,15 +226,15 @@ export function useSeats() {
     }
   };
 
-  // 座席の占有
-  const occupySeat = async (seatId: number, name: string) => {
+  // 座席の占有 - useCallback を使用してメモ化（不必要な再レンダリングを防止）
+  const occupySeat = useCallback(async (seatId: number, name: string) => {
     await updateSeat(seatId, { name, is_occupied: true });
-  };
+  }, []);
 
-  // 座席の解放
-  const releaseSeat = async (seatId: number) => {
+  // 座席の解放 - useCallback を使用してメモ化
+  const releaseSeat = useCallback(async (seatId: number) => {
     await updateSeat(seatId, { name: null, is_occupied: false });
-  };
+  }, []);
 
   // 社内人口密度率の更新
   const updateDensity = async (value: number) => {
