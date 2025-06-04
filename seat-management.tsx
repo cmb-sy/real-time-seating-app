@@ -10,9 +10,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User, UserX } from "lucide-react";
+import { User, UserX, LayoutDashboard } from "lucide-react";
 import { useSeats } from "@/hooks/use-seats";
 import { useConfetti } from "@/hooks/use-confetti";
+import { NavMenu } from "@/components/nav-menu";
 
 interface Seat {
   id: number;
@@ -139,13 +140,11 @@ export default function SeatManagement() {
     <ClientOnly>
       <div className="min-h-screen p-4 bg-white">
         {/* 上部エリア: 左右に分かれたヘッダー */}
-        <div className="flex justify-between mb-8">
-          {" "}
-          {/* 左上：日付、天気、社内人口密度率の入力エリア */}
-          <div className="w-1/3">
+        <div className="flex justify-between items-center mb-8">
+          {/* 左上：日付と社内人口密度率 */}
+          <div>
             {/* 日付表示 */}
-            <div className="mb-4">
-              {/* 今日の日付 */}
+            <div className="mb-3">
               <div className="text-sm font-medium text-gray-700">
                 {new Date().toLocaleDateString("ja-JP", {
                   year: "numeric",
@@ -155,9 +154,11 @@ export default function SeatManagement() {
               </div>
             </div>
 
-            {/* 社内人口密度率 - 元に戻す */}
+            {/* 社内人口密度率 */}
             <div className="flex items-center">
-              <span className="text-sm font-medium mr-2">社内人口密度率:</span>
+              <span className="text-sm font-medium mr-2 text-gray-700">
+                社内人口密度率:
+              </span>
               <Input
                 type="number"
                 min="0"
@@ -166,15 +167,20 @@ export default function SeatManagement() {
                 onChange={(e) => updateDensity(Number(e.target.value))}
                 className="w-16 text-center text-sm"
               />
-              <span className="text-sm ml-1">%</span>
+              <span className="text-sm ml-1 text-gray-700">%</span>
             </div>
           </div>
-          {/* 右上：タイトルとステータス */}
+
+          {/* 右上：メニューボタンのみ */}
+          <div>
+            {/* メニューボタン */}
+            <NavMenu />
+          </div>
         </div>
 
         {/* 中央エリア: 座席レイアウト - 縦横中央に配置 */}
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-          <div className="w-full max-w-5xl bg-gray-50 p-8 rounded-xl">
+          <div className="w-full max-w-5xl bg-gray-50 p-8 rounded-xl border border-gray-200 shadow-sm">
             {/* 4×2のグリッドレイアウト - 席を大きく */}
             <div className="grid grid-cols-4 grid-rows-2 gap-10 mx-auto">
               {seats.map((seat) => (
