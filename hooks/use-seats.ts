@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 interface Seat {
   id: number;
   name: string | null;
-  is_occupied: boolean; // Supabaseのカラム名に合わせて変更
+  is_occupied: boolean;
+  updated_date?: string;
 }
 
 // 日付が21時以降かどうかをチェック
@@ -24,6 +25,7 @@ export function useSeats() {
       id: i + 1,
       name: null,
       is_occupied: false, // スネークケースに変更
+      updated_date: new Date().toTimeString().split(" ")[0], // "HH:MM:SS"形式
     }));
 
   // 全ての座席と密集度をリセットする関数
@@ -181,7 +183,14 @@ export function useSeats() {
         return;
       }
 
-      const updatedSeat = { ...seats[seatIndex], ...updates };
+      // 更新時間を追加 (time型のカラムなのでHH:MM:SSの形式にする)
+      const now = new Date();
+      const timeString = now.toTimeString().split(" ")[0]; // "HH:MM:SS"形式
+      const updatedSeat = {
+        ...seats[seatIndex],
+        ...updates,
+        updated_date: timeString,
+      };
 
       // Supabaseデータを更新
       const { data, error } = await supabase.from("seats").upsert(updatedSeat);

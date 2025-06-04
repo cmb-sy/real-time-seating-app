@@ -12,11 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { User, UserX } from "lucide-react";
 import { useSeats } from "@/hooks/use-seats";
+import { useConfetti } from "@/hooks/use-confetti";
 
 interface Seat {
   id: number;
   name: string | null;
   is_occupied: boolean;
+  updated_date?: string; // 更新時間のフィールド追加
 }
 
 // クライアントサイドでのみレンダリングするコンポーネントをラップする
@@ -43,6 +45,11 @@ export default function SeatManagement() {
     updateDensity,
   } = useSeats();
 
+  // クラッカーアニメーションのみ使用
+
+  // クラッカーアニメーション
+  const { triggerConfetti } = useConfetti();
+
   const [editingSeat, setEditingSeat] = useState<number | null>(null);
   const [inputName, setInputName] = useState("");
 
@@ -50,7 +57,6 @@ export default function SeatManagement() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   // 座席クリックの処理
-
   const handleSeatClick = (seatId: number) => {
     const seat = seats.find((s) => s.id === seatId);
     if (!seat) return;
@@ -74,6 +80,9 @@ export default function SeatManagement() {
 
     // 座席を更新
     await occupySeat(seatId, inputName.trim());
+
+    // クラッカーアニメーションを発火
+    triggerConfetti(`seat-${seatId}`);
 
     setEditingSeat(null);
     setInputName("");
@@ -100,8 +109,6 @@ export default function SeatManagement() {
     setIsConfirmDialogOpen(false);
     setConfirmingSeat(null);
   };
-
-  const occupiedCount = seats?.filter((seat) => seat.is_occupied)?.length || 0;
 
   // 現在時刻が21時以降かどうか
   const [isEveningTime, setIsEveningTime] = useState(false);
@@ -133,16 +140,22 @@ export default function SeatManagement() {
       <div className="min-h-screen p-4 bg-white">
         {/* 上部エリア: 左右に分かれたヘッダー */}
         <div className="flex justify-between mb-8">
-          {/* 左上：日付表示と社内人口密度率の入力エリア */}
-          <div className="w-1/4">
-            {/* 今日の日付 */}
-            <div className="text-sm font-medium text-gray-600 mb-2">
-              {new Date().toLocaleDateString("ja-JP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+          {" "}
+          {/* 左上：日付、天気、社内人口密度率の入力エリア */}
+          <div className="w-1/3">
+            {/* 日付表示 */}
+            <div className="mb-4">
+              {/* 今日の日付 */}
+              <div className="text-sm font-medium text-gray-700">
+                {new Date().toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </div>
             </div>
+
+            {/* 社内人口密度率 - 元に戻す */}
             <div className="flex items-center">
               <span className="text-sm font-medium mr-2">社内人口密度率:</span>
               <Input
@@ -156,21 +169,7 @@ export default function SeatManagement() {
               <span className="text-sm ml-1">%</span>
             </div>
           </div>
-
           {/* 右上：タイトルとステータス */}
-          <div className="text-right">
-            <div
-              className={`text-sm ${
-                isEveningTime ? "text-orange-600 font-medium" : "text-gray-600"
-              }`}
-            >
-              21:00に座席状況と社内人口密度率は自動リセットされます
-              {isEveningTime && " (リセット時間帯です)"}
-            </div>
-            <div className="text-sm text-gray-600 font-medium">
-              着席中: {occupiedCount}/8席
-            </div>
-          </div>
         </div>
 
         {/* 中央エリア: 座席レイアウト - 縦横中央に配置 */}
@@ -192,6 +191,7 @@ export default function SeatManagement() {
                     />
                   ) : (
                     <Button
+                      id={`seat-${seat.id}`}
                       variant={seat.is_occupied ? "default" : "outline"}
                       className={`
                       h-40 w-full flex flex-col items-center justify-center p-4
@@ -215,8 +215,22 @@ export default function SeatManagement() {
                         )}
                       </div>
                       {seat.is_occupied && seat.name && (
-                        <div className="text-lg w-full text-center break-all line-clamp-2">
+                        <div
+                          className="text-lg w-full text-center break-all line-clamp-2 cursor-pointer hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation(); // 親ボタンのクリックを止める
+                            setEditingSeat(seat.id);
+                            setInputName(seat.name || "");
+                          }}
+                          title="クリックして名前を編集"
+                        >
                           {seat.name}
+                        </div>
+                      )}
+                      {seat.updated_date && (
+                        <div className="text-xs mt-2 text-center opacity-70">
+                          {seat.updated_date.substring(0, 5)}
+                          更新
                         </div>
                       )}
                     </Button>
