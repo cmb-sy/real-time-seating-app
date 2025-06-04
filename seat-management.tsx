@@ -153,11 +153,8 @@ export default function SeatManagement() {
             </div>
           </div>
 
-          {/* 右上：メニューボタンのみ */}
-          <div>
-            {/* メニューボタン */}
-            <NavMenu />
-          </div>
+          {/* 右上：スペース確保（メニューはrootレイアウトに移動済み） */}
+          <div></div>
         </div>
 
         {/* 中央エリア: 座席レイアウト - 縦横中央に配置 */}
@@ -182,7 +179,7 @@ export default function SeatManagement() {
                       id={`seat-${seat.id}`}
                       variant={seat.is_occupied ? "default" : "outline"}
                       className={`
-                      h-40 w-full flex flex-col items-center justify-center p-4
+                      h-40 w-full flex flex-col items-center justify-start p-4 pb-8 relative
                       ${
                         seat.is_occupied
                           ? "bg-blue-500 hover:bg-blue-600 text-white"
@@ -204,19 +201,26 @@ export default function SeatManagement() {
                       </div>
                       {seat.is_occupied && seat.name && (
                         <div
-                          className="text-lg w-full text-center break-all line-clamp-2 cursor-pointer hover:underline"
+                          className="text-lg w-full px-1 text-center break-words overflow-hidden cursor-pointer hover:underline mb-3"
+                          style={{
+                            maxHeight: "3.6rem",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            wordBreak: "break-word",
+                          }}
                           onClick={(e) => {
                             e.stopPropagation(); // 親ボタンのクリックを止める
                             setEditingSeat(seat.id);
                             setInputName(seat.name || "");
                           }}
-                          title="クリックして名前を編集"
+                          title={seat.name}
                         >
                           {seat.name}
                         </div>
                       )}
                       {seat.updated_date && (
-                        <div className="text-xs mt-2 text-center opacity-70">
+                        <div className="text-xs text-center opacity-70 absolute bottom-2 w-full left-0">
                           {seat.updated_date.substring(0, 5)}
                           更新
                         </div>
