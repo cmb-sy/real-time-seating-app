@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -102,12 +103,10 @@ export default function SeatManagement() {
   };
 
   const handleConfirmLeave = async () => {
-    console.log("退席処理開始:", confirmingSeat);
     try {
       if (confirmingSeat !== null) {
         // 座席を解放
         await releaseSeat(confirmingSeat);
-        console.log("退席処理成功:", confirmingSeat);
       } else {
         console.error("退席処理失敗: confirmingSeat が null です");
       }
@@ -258,9 +257,12 @@ export default function SeatManagement() {
 
       {/* 退席確認ダイアログ */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent>
+        <DialogContent aria-describedby="seat-operation-description">
           <DialogHeader>
             <DialogTitle>座席の操作</DialogTitle>
+            <DialogDescription id="seat-operation-description">
+              座席の操作を行ってください。
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {editingSeat === confirmingSeat ? (
