@@ -94,8 +94,9 @@ export default function ContactPage() {
 
         {/* お問い合わせフォームセクション */}
         <section className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-5">機能改善のご要望</h2>
-
+          <h2 className="text-xl font-semibold mb-5">
+            機能改善のご要望(まだ使えません)
+          </h2>
           {isSubmitted ? (
             <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-md">
               <p className="font-medium">ご要望を受け付けました</p>

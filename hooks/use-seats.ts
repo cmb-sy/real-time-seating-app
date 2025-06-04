@@ -8,11 +8,6 @@ interface Seat {
   updated_date?: string;
 }
 
-// 日付が21時以降かどうかをチェック
-const isAfter21 = (date = new Date()): boolean => {
-  return date.getHours() >= 21;
-};
-
 export function useSeats() {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [densityValue, setDensityValue] = useState<number>(0);
@@ -25,7 +20,7 @@ export function useSeats() {
       id: i + 1,
       name: null,
       is_occupied: false,
-      updated_date: new Date().toTimeString().split(" ")[0],
+      updated_date: new Date().toTimeString().substring(0, 5),
     }));
 
   // Supabaseからデータを取得
@@ -152,7 +147,8 @@ export function useSeats() {
       }
 
       const now = new Date();
-      const timeString = now.toTimeString().split(" ")[0];
+      // HH:MM形式に統一
+      const timeString = now.toTimeString().substring(0, 5);
       const updatedSeat = {
         ...seat,
         ...updates,
@@ -164,6 +160,11 @@ export function useSeats() {
         setError(`座席の更新に失敗しました: ${error.message}`);
         throw error;
       }
+
+      // ローカルステートを即時更新
+      setSeats((prevSeats) =>
+        prevSeats.map((s) => (s.id === seatId ? updatedSeat : s))
+      );
     } catch (e) {
       if (e instanceof Error) {
         setError(`エラー: ${e.message}`);
