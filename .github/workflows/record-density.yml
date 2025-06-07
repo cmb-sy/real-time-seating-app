@@ -1,0 +1,85 @@
+name: Record Density Data
+
+on:
+  schedule:
+    # 平日の17:00に実行（UTC 8:00）
+    - cron: "0 8 * * 1-5"
+  # 手動実行用のトリガー
+  workflow_dispatch:
+
+jobs:
+  record-density:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Record density data
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "🔍 デバッグ情報:"
+          echo "Supabase URL: ${{ secrets.SUPABASE_URL }}"
+          echo "Service Role Key length: ${#SUPABASE_SERVICE_ROLE_KEY}"
+          
+          # 現在の曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
+          DAY_OF_WEEK=$(node -e "console.log(new Date().getDay())")
+          echo "📅 曜日: $DAY_OF_WEEK"
+          
+          # 占有席数を取得
+          echo "🪑 占有席数を取得中..."
+          OCCUPIED_SEATS_RESPONSE=$(curl -s -X GET \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/seats?select=count&is_occupied=eq.true" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: count=exact")
+          echo "占有席数レスポンス: $OCCUPIED_SEATS_RESPONSE"
+          OCCUPIED_SEATS=$(echo $OCCUPIED_SEATS_RESPONSE | jq -r '.count')
+          echo "🪑 占有席数: $OCCUPIED_SEATS"
+          
+          # 密度率を取得
+          echo "📊 密度率を取得中..."
+          DENSITY_RATE_RESPONSE=$(curl -s -X GET \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/settings?key=eq.density" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation")
+          echo "密度率レスポンス: $DENSITY_RATE_RESPONSE"
+          DENSITY_RATE=$(echo $DENSITY_RATE_RESPONSE | jq -r '.[0].value')
+          echo "📊 密度率: $DENSITY_RATE"
+          
+          # データが有効な場合のみ記録
+          if [ "$OCCUPIED_SEATS" -gt 0 ] && [ "$DENSITY_RATE" != "0" ]; then
+            echo "📝 記録を開始します..."
+            
+            # データを記録
+            RECORD_RESPONSE=$(curl -s -X POST \
+              "${{ secrets.SUPABASE_URL }}/rest/v1/density_history" \
+              -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Content-Type: application/json" \
+              -H "Prefer: return=representation" \
+              -d "{
+                \"day_of_week\": $DAY_OF_WEEK,
+                \"occupied_seats\": $OCCUPIED_SEATS,
+                \"density_rate\": $DENSITY_RATE
+              }")
+            echo "記録レスポンス: $RECORD_RESPONSE"
+            
+            echo "✅ データの記録が完了しました"
+          else
+            echo "⚠️ 記録条件を満たしていません"
+            echo "占有席数: $OCCUPIED_SEATS"
+            echo "密度率: $DENSITY_RATE"
+          fi 
