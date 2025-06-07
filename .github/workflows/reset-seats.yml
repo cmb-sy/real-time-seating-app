@@ -11,18 +11,49 @@ jobs:
   reset-seats:
     runs-on: ubuntu-latest
     steps:
-      - name: Reset seats data
+      - name: Debug environment
         run: |
-          RESPONSE=$(curl -s -X POST ${{ secrets.RESET_API_ENDPOINT }} \
+          echo "API Endpoint: ${{ secrets.RESET_API_ENDPOINT }}"
+          echo "API Key length: ${#RESET_API_KEY}"
+      
+      - name: Reset seats data - 1st attempt
+        id: reset-attempt-1
+        continue-on-error: true
+        run: |
+          echo "リセットAPIを呼び出します..."
+          RESPONSE=$(curl -v -X POST ${{ secrets.RESET_API_ENDPOINT }} \
             -H "Content-Type: application/json" \
             -d '{"authorization":"${{ secrets.RESET_API_KEY }}"}')
           echo "API Response: $RESPONSE"
-
-          # レスポンスからステータスを確認
+          echo "response=$RESPONSE" >> $GITHUB_OUTPUT
+          
           if echo "$RESPONSE" | grep -q "success\":true"; then
-            echo "座席リセットが完了しました"
+            echo "✅ 座席リセットが完了しました"
+            exit 0
           else
-            echo "座席リセットに失敗しました"
-            echo "$RESPONSE"
+            echo "❌ 1回目の座席リセットに失敗しました"
+            echo "エラーの詳細: $RESPONSE"
+            exit 1
+          fi
+      
+      # 1回目が失敗した場合は10秒待ってからリトライ
+      - name: Wait 10 seconds before retry
+        if: steps.reset-attempt-1.outcome == 'failure'
+        run: sleep 10
+      
+      - name: Reset seats data - 2nd attempt
+        if: steps.reset-attempt-1.outcome == 'failure'
+        run: |
+          echo "2回目のリセットを試みます..."
+          RESPONSE=$(curl -v -X POST ${{ secrets.RESET_API_ENDPOINT }} \
+            -H "Content-Type: application/json" \
+            -d '{"authorization":"${{ secrets.RESET_API_KEY }}"}')
+          echo "API Response: $RESPONSE"
+          
+          if echo "$RESPONSE" | grep -q "success\":true"; then
+            echo "✅ 座席リセットが完了しました（2回目）"
+          else
+            echo "❌ 座席リセットに失敗しました（2回目）"
+            echo "エラーの詳細: $RESPONSE"
             exit 1
           fi
