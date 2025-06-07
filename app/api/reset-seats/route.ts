@@ -31,20 +31,43 @@ export async function POST(request: Request) {
     const emptySeats = createEmptySeats();
 
     // トランザクション的な処理を実行
+    // 全座席データを削除
     const { error: deleteError } = await supabase
       .from("seats")
       .delete()
-      .neq("id", 0);
+      .gte("id", 1)
+      .lte("id", 8);
     if (deleteError) {
       throw new Error(`座席データの削除に失敗: ${deleteError.message}`);
     }
 
+    // 削除後の状態を確認
+    const { data: checkData, error: checkError } = await supabase
+      .from("seats")
+      .select("*");
+    if (checkError) {
+      throw new Error(`削除確認に失敗: ${checkError.message}`);
+    }
+    console.log("削除後の座席データ:", checkData);
+
+    // 新しい空席データを挿入
     const { error: insertError } = await supabase
       .from("seats")
-      .upsert(emptySeats);
+      .insert(emptySeats)
+      .select();
     if (insertError) {
       throw new Error(`新しい座席データの挿入に失敗: ${insertError.message}`);
     }
+
+    // 挿入後の状態を確認
+    const { data: finalData, error: finalError } = await supabase
+      .from("seats")
+      .select("*")
+      .order("id");
+    if (finalError) {
+      throw new Error(`最終確認に失敗: ${finalError.message}`);
+    }
+    console.log("リセット後の最終データ:", finalData);
 
     const { error: densityError } = await supabase
       .from("settings")

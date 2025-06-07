@@ -3,7 +3,7 @@ name: Reset Seats Scheduler
 on:
   schedule:
     # 毎日21時0分に実行（UTC 12:00）
-    - cron: "0 12 * * *"
+    - cron: "0 10 * * *"
   # 手動実行用のトリガー
   workflow_dispatch:
 
@@ -13,14 +13,16 @@ jobs:
     steps:
       - name: Reset seats data
         run: |
-          curl -X POST ${{ secrets.RESET_API_ENDPOINT }} \
+          RESPONSE=$(curl -s -X POST ${{ secrets.RESET_API_ENDPOINT }} \
             -H "Content-Type: application/json" \
-            -d '{"authorization":"${{ secrets.RESET_API_KEY }}"}'
-      - name: Check result
-        run: |
-          if [ $? -ne 0 ]; then
-            echo "座席リセットに失敗しました"
-            exit 1
-          else
+            -d '{"authorization":"${{ secrets.RESET_API_KEY }}"}')
+          echo "API Response: $RESPONSE"
+
+          # レスポンスからステータスを確認
+          if echo "$RESPONSE" | grep -q "success\":true"; then
             echo "座席リセットが完了しました"
+          else
+            echo "座席リセットに失敗しました"
+            echo "$RESPONSE"
+            exit 1
           fi
