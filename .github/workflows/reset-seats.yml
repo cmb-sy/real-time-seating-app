@@ -21,7 +21,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "リセットAPIを呼び出します..."
-          RESPONSE=$(curl -v -X POST ${{ secrets.RESET_API_ENDPOINT }} \
+          RESPONSE=$(curl -L -v -X POST ${{ secrets.RESET_API_ENDPOINT }} \
             -H "Content-Type: application/json" \
             -d '{"authorization":"${{ secrets.RESET_API_KEY }}"}')
           echo "API Response: $RESPONSE"
@@ -45,7 +45,7 @@ jobs:
         if: steps.reset-attempt-1.outcome == 'failure'
         run: |
           echo "2回目のリセットを試みます..."
-          RESPONSE=$(curl -v -X POST ${{ secrets.RESET_API_ENDPOINT }} \
+          RESPONSE=$(curl -L -v -X POST ${{ secrets.RESET_API_ENDPOINT }} \
             -H "Content-Type: application/json" \
             -d '{"authorization":"${{ secrets.RESET_API_KEY }}"}')
           echo "API Response: $RESPONSE"
