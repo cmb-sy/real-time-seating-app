@@ -34,12 +34,14 @@ export const config = {
   matcher: [
     // 保護するルート
     '/admin/:path*',
-    '/seat-management', 
+    '/seat-management',
+    '/api/reset-seats',
+    '/api/seats/:path*',
     
     // ログインページ
-    '/login'
+    '/login',
     
     // 全てのページを保護する場合（ログイン、API、静的ファイル以外）
-    // '/((?!api|_next/static|_next/image|favicon.ico|login).*)' 
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|login).*)'
   ]
 }
