@@ -1,47 +1,86 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { supabase } from '@/lib/supabase'
 
-// NextAuthベースの認証チェック
-export async function middleware(request: NextRequest) {
-  // NextAuth JWT トークンを取得
-  const token = await getToken({ req: request })
-  const isAuthenticated = !!token
-  
-  // 現在のパス
-  const path = request.nextUrl.pathname
-  
-  // ログインページへのアクセスかどうか
-  const isLoginPage = path === '/login'
-  
-  // 認証が必要なページでトークンがない場合はログインページへリダイレクト
-  if (!isAuthenticated && !isLoginPage) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('callbackUrl', path)
-    return NextResponse.redirect(loginUrl)
+// Basic認証のヘルパー関数
+function parseBasicAuth(authHeader: string | null) {
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return null
   }
-  
-  // すでに認証されていて、ログインページにアクセスした場合はホームページへリダイレクト
-  if (isAuthenticated && isLoginPage) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
-  
-  return NextResponse.next()
+
+  const base64Credentials = authHeader.split(' ')[1]
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8')
+  const [username, password] = credentials.split(':')
+
+  return { username, password }
 }
 
-// 認証が必要なルートとログインページ用の設定
+// Basic認証のミドルウェア
+export async function middleware(request: NextRequest) {
+  // 認証が必要なパスかどうかを確認
+  const path = request.nextUrl.pathname
+  const isAuthRequired = !path.startsWith('/_next') && 
+                        !path.startsWith('/favicon.ico')
+
+  if (!isAuthRequired) {
+    return NextResponse.next()
+  }
+
+  // Basic認証ヘッダーを取得
+  const authHeader = request.headers.get('authorization')
+  const credentials = parseBasicAuth(authHeader)
+
+  if (!credentials) {
+    // 認証情報がない場合は401を返す
+    return new NextResponse(null, {
+      status: 401,
+      headers: {
+        'WWW-Authenticate': 'Basic realm="Secure Area"',
+      },
+    })
+  }
+
+  try {
+    // Supabaseのloginテーブルで認証情報を確認
+    const { data, error } = await supabase
+      .from('login')
+      .select('id, pass')
+      .eq('id', credentials.username)
+      .eq('pass', credentials.password)
+      .single()
+
+    if (error || !data) {
+      // 認証失敗
+      return new NextResponse(null, {
+        status: 401,
+        headers: {
+          'WWW-Authenticate': 'Basic realm="Secure Area"',
+        },
+      })
+    }
+
+    // 認証成功
+    return NextResponse.next()
+  } catch (error) {
+    console.error('認証エラー:', error)
+    return new NextResponse(null, {
+      status: 500,
+      headers: {
+        'WWW-Authenticate': 'Basic realm="Secure Area"',
+      },
+    })
+  }
+}
+
+// 全てのパスに対してミドルウェアを適用
 export const config = {
   matcher: [
-    // 保護するルート
-    '/admin/:path*',
-    '/seat-management',
-    '/api/reset-seats',
-    '/api/seats/:path*',
-    
-    // ログインページ
-    '/login',
-    
-    // 全てのページを保護する場合（ログイン、API、静的ファイル以外）
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|login).*)'
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 }
