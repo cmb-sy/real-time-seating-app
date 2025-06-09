@@ -11,30 +11,52 @@ jobs:
   reset-seats:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug environment
-        run: |
-          echo "API Endpoint: ${{ secrets.RESET_API_ENDPOINT }}"
-          echo "API Key length: ${#RESET_API_KEY}"
-          # APIキーがBase64形式かを確認
-          if [[ "${{ secrets.RESET_API_KEY }}" =~ ^[A-Za-z0-9+/=]+$ ]]; then
-            echo "API Key format: Valid Base64 format"
-          else
-            echo "API Key format: Not in Base64 format"
-          fi
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Reset seats data
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          echo "リセットAPIを呼び出します..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.RESET_API_ENDPOINT }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"authorization\": \"${{ secrets.RESET_API_KEY }}\"}")
-          echo "API Response: $RESPONSE"
-
-          if echo "$RESPONSE" | grep -q "\"success\":true"; then
-            echo "✅ 座席リセットが完了しました"
-            exit 0
-          else
-            echo "❌ 座席リセットに失敗しました"
-            echo "エラーの詳細: $RESPONSE"
+          # シークレットの存在確認
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "エラー: Supabase認証情報が設定されていません"
             exit 1
           fi
+
+          echo "🔄 座席データをリセット中..."
+
+          # 全座席をリセット（name: NULL, is_occupied: FALSE, updated_date: NULL）
+          RESET_RESPONSE=$(curl -s -X PATCH \
+            "${SUPABASE_URL}/rest/v1/seats?id=gte.1&id=lte.8" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{
+              "name": null,
+              "is_occupied": false,
+              "updated_date": null
+            }')
+
+          echo "リセット結果: $RESET_RESPONSE"
+
+          # 結果を確認
+          UPDATED_COUNT=$(echo "$RESET_RESPONSE" | jq 'length // 0')
+          if [ "$UPDATED_COUNT" -eq 8 ]; then
+            echo "✅ 座席リセットが完了しました（${UPDATED_COUNT}席）"
+          else
+            echo "⚠️ 期待される座席数と異なります: ${UPDATED_COUNT}席"
+          fi
+
+          # 密度率もリセット
+          echo "📊 密度率をリセット中..."
+          curl -s -X PATCH \
+            "${SUPABASE_URL}/rest/v1/settings?key=eq.density" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"value": 0}'
+
+          echo "✅ 全データのリセットが完了しました"
