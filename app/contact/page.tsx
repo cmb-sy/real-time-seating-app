@@ -24,9 +24,6 @@ const formSchema = z.object({
   name: z.string().min(1, {
     message: "名前を入力してください",
   }),
-  email: z.string().email({
-    message: "有効なメールアドレスを入力してください",
-  }),
   message: z.string().min(10, {
     message: "メッセージは最低10文字以上入力してください",
   }),
@@ -41,7 +38,6 @@ export default function ContactPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      email: "",
       message: "",
     },
   });
@@ -119,12 +115,12 @@ export default function ContactPage() {
               >
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>メールアドレス</FormLabel>
+                      <FormLabel>お名前</FormLabel>
                       <FormControl>
-                        <Input placeholder="example@example.com" {...field} />
+                        <Input placeholder="山田太郎" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
