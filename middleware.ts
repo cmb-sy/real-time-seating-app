@@ -1,65 +1,129 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import bcrypt from "bcryptjs";
-
-// Supabaseクライアントを作成（サービスロールキーを使用）
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-let supabase: any = null;
-
-// Supabaseクライアントを遅延初期化
-function getSupabaseClient() {
-  if (!supabase && supabaseUrl && supabaseServiceKey) {
-    supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-  }
-  return supabase;
-}
 
 export async function middleware(request: NextRequest) {
-  // API routes を除外（認証が必要ないエンドポイント）
-  if (request.nextUrl.pathname.startsWith("/api/")) {
-    return NextResponse.next();
-  }
-
-  // Next.js内部ファイルも除外
-  if (request.nextUrl.pathname.startsWith("/_next/")) {
-    return NextResponse.next();
-  }
-
-  // Authorization ヘッダーを取得
-  const authorizationHeader = request.headers.get("authorization");
-
-  // Basic認証のチェック
-  if (!authorizationHeader || !authorizationHeader.startsWith("Basic ")) {
-    return new NextResponse("Authentication required", {
-      status: 401,
-      headers: {
-        "WWW-Authenticate": 'Basic realm="Secure Area"',
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    });
-  }
-
   try {
+    // API routes を除外（認証が必要ないエンドポイント）
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+      return NextResponse.next();
+    }
+
+    // Next.js内部ファイルも除外
+    if (request.nextUrl.pathname.startsWith("/_next/")) {
+      return NextResponse.next();
+    }
+
+    // 静的ファイルも除外
+    if (
+      request.nextUrl.pathname.match(
+        /\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$/
+      )
+    ) {
+      return NextResponse.next();
+    }
+
+    // Authorization ヘッダーを取得
+    const authorizationHeader = request.headers.get("authorization");
+
+    // Basic認証のチェック
+    if (!authorizationHeader || !authorizationHeader.startsWith("Basic ")) {
+      return new NextResponse("Authentication required", {
+        status: 401,
+        headers: {
+          "WWW-Authenticate": 'Basic realm="Secure Area"',
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      });
+    }
+
     // Base64でエンコードされた認証情報をデコード
     const base64Credentials = authorizationHeader.split(" ")[1];
+    if (!base64Credentials) {
+      return new NextResponse("Invalid authentication format", {
+        status: 401,
+        headers: {
+          "WWW-Authenticate": 'Basic realm="Secure Area"',
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      });
+    }
+
     const credentials = Buffer.from(base64Credentials, "base64").toString(
       "ascii"
     );
     const [username, password] = credentials.split(":");
 
-    // 本番環境: Supabaseで認証
-    if (supabaseUrl && supabaseServiceKey) {
-      const supabaseClient = getSupabaseClient();
+    if (!username || !password) {
+      return new NextResponse("Invalid credentials format", {
+        status: 401,
+        headers: {
+          "WWW-Authenticate": 'Basic realm="Secure Area"',
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      });
+    }
 
-      if (supabaseClient) {
-        const { data, error } = await supabaseClient.rpc("verify_password", {
+    // 環境変数で認証（Supabaseが利用できない場合のフォールバック）
+    const authUsername = process.env.AUTH_USERNAME;
+    const authPasswordHash = process.env.AUTH_PASSWORD_HASH;
+
+    if (authUsername && authPasswordHash) {
+      // ユーザー名の確認
+      if (username !== authUsername) {
+        return new NextResponse("Invalid credentials", {
+          status: 401,
+          headers: {
+            "WWW-Authenticate": 'Basic realm="Secure Area"',
+            "Content-Type": "text/plain; charset=utf-8",
+          },
+        });
+      }
+
+      // bcryptを安全にインポート
+      try {
+        const bcrypt = await import("bcryptjs");
+        const isPasswordValid = bcrypt.default.compareSync(
+          password,
+          authPasswordHash
+        );
+
+        if (!isPasswordValid) {
+          return new NextResponse("Invalid credentials", {
+            status: 401,
+            headers: {
+              "WWW-Authenticate": 'Basic realm="Secure Area"',
+              "Content-Type": "text/plain; charset=utf-8",
+            },
+          });
+        }
+
+        return NextResponse.next();
+      } catch (bcryptError) {
+        // bcryptのインポートに失敗した場合
+        return new NextResponse("Authentication error", {
+          status: 401,
+          headers: {
+            "WWW-Authenticate": 'Basic realm="Secure Area"',
+            "Content-Type": "text/plain; charset=utf-8",
+          },
+        });
+      }
+    }
+
+    // Supabaseで認証を試行
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (supabaseUrl && supabaseServiceKey) {
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        });
+
+        const { data, error } = await supabase.rpc("verify_password", {
           username: username,
           password: password,
         });
@@ -85,17 +149,9 @@ export async function middleware(request: NextRequest) {
             },
           });
         }
-      }
-    }
-
-    // 開発環境: 環境変数で認証
-    const authUsername = process.env.AUTH_USERNAME;
-    const authPasswordHash = process.env.AUTH_PASSWORD_HASH;
-
-    if (authUsername && authPasswordHash) {
-      // ユーザー名の確認
-      if (username !== authUsername) {
-        return new NextResponse("Invalid credentials", {
+      } catch (supabaseError) {
+        // Supabaseの接続に失敗した場合、認証プロンプトを表示
+        return new NextResponse("Authentication required", {
           status: 401,
           headers: {
             "WWW-Authenticate": 'Basic realm="Secure Area"',
@@ -103,24 +159,9 @@ export async function middleware(request: NextRequest) {
           },
         });
       }
-
-      // パスワードのハッシュ比較
-      const isPasswordValid = bcrypt.compareSync(password, authPasswordHash);
-
-      if (!isPasswordValid) {
-        return new NextResponse("Invalid credentials", {
-          status: 401,
-          headers: {
-            "WWW-Authenticate": 'Basic realm="Secure Area"',
-            "Content-Type": "text/plain; charset=utf-8",
-          },
-        });
-      }
-
-      return NextResponse.next();
     }
 
-    // 認証情報が設定されていない場合も401エラーで認証プロンプトを表示
+    // 認証情報が全く設定されていない場合
     return new NextResponse("Authentication required", {
       status: 401,
       headers: {
@@ -129,7 +170,8 @@ export async function middleware(request: NextRequest) {
       },
     });
   } catch (error) {
-    return new NextResponse("Invalid credentials", {
+    // 予期しないエラーが発生した場合も認証プロンプトを表示
+    return new NextResponse("Authentication required", {
       status: 401,
       headers: {
         "WWW-Authenticate": 'Basic realm="Secure Area"',
