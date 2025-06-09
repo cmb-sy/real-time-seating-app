@@ -6,5 +6,9 @@ declare namespace NodeJS {
 
     // リセットAPI用の環境変数
     RESET_API_KEY?: string;
+
+    // Basic認証用の環境変数
+    AUTH_USERNAME?: string;
+    AUTH_PASSWORD_HASH?: string;
   }
 }

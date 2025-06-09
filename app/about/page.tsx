@@ -30,6 +30,19 @@ export default function AboutPage() {
             <p>書くからちょっと待って...</p>
           </section>
         </div>
+
+        <h2 className="text-3xl font-bold mb-6">今後の実装予定</h2>
+
+        <div className="space-y-6 text-gray-700">
+          <section className="bg-gray-50 p-6 rounded-lg">
+            <ul className="list-disc list-inside space-y-2">
+              <li>混雑具合と社内人口密度率の予測機能</li>
+              <li>完全レスポンシブ対応</li>
+              <li>セキュリティ強化</li>
+              <li>投げ銭させる機能（冗談）</li>
+            </ul>
+          </section>
+        </div>
       </div>
     </div>
   );

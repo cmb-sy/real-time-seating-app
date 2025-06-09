@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 export function middleware(request: NextRequest) {
   // API routes を除外（認証が必要ないエンドポイント）
@@ -8,12 +9,12 @@ export function middleware(request: NextRequest) {
 
   // Basic認証のための環境変数をチェック
   const basicAuthUser = process.env.AUTH_USERNAME;
-  const basicAuthPassword = process.env.AUTH_PASSWORD;
+  const basicAuthPasswordHash = process.env.AUTH_PASSWORD_HASH;
 
   // 環境変数が設定されていない場合はBasic認証をスキップ
-  if (!basicAuthUser || !basicAuthPassword) {
+  if (!basicAuthUser || !basicAuthPasswordHash) {
     console.warn(
-      "⚠️ AUTH_USERNAME or AUTH_PASSWORD not set, Basic Auth disabled"
+      "⚠️ AUTH_USERNAME or AUTH_PASSWORD_HASH not set, Basic Auth disabled"
     );
     return NextResponse.next();
   }
@@ -41,7 +42,20 @@ export function middleware(request: NextRequest) {
   const [username, password] = credentials.split(":");
 
   // 認証情報を検証
-  if (username !== basicAuthUser || password !== basicAuthPassword) {
+  // ユーザー名の確認
+  if (username !== basicAuthUser) {
+    return new NextResponse("Invalid credentials", {
+      status: 401,
+      headers: {
+        "WWW-Authenticate": 'Basic realm="Secure Area"',
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
+  }
+
+  // パスワードのハッシュ比較
+  const isPasswordValid = bcrypt.compareSync(password, basicAuthPasswordHash);
+  if (!isPasswordValid) {
     return new NextResponse("Invalid credentials", {
       status: 401,
       headers: {
