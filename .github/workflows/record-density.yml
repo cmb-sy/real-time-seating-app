@@ -23,7 +23,7 @@ jobs:
         run: npm install
 
       - name: Install additional tools
-        run: sudo apt-get update && sudo apt-get install -y jq
+        run: sudo apt-get update && sudo apt-get install -y jq bc
 
       - name: Check required secrets
         run: |
@@ -50,7 +50,10 @@ jobs:
 
           # 現在の曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
           DAY_OF_WEEK=$(node -e "console.log(new Date().getDay())")
-          echo "📅 曜日: $DAY_OF_WEEK"
+
+          # 曜日名を取得（デバッグ用）
+          DAY_NAME=$(node -e "const days = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日']; console.log(days[new Date().getDay()])")
+          echo "📅 曜日: $DAY_OF_WEEK ($DAY_NAME)"
 
           # 占有席数を取得
           echo "🪑 占有席数を取得中..."
@@ -97,7 +100,7 @@ jobs:
           # レスポンスが空か配列がない場合のエラーハンドリング
           if [ -z "$DENSITY_RATE_RESPONSE" ] || [ "$DENSITY_RATE_RESPONSE" = "[]" ]; then
             echo "⚠️ 密度率データが取得できませんでした"
-            DENSITY_RATE=50.0  # デフォルト値を設定 (0ではなく50%に設定)
+            DENSITY_RATE=0  # 密度率データがない場合は0とする
           else
             DENSITY_RATE=$(echo $DENSITY_RATE_RESPONSE | jq -r '.[0].value // "50.0"')
             # 数値であることを確認
@@ -111,11 +114,18 @@ jobs:
           # データが有効かチェック（OCCUPIED_SEATSが数値であることを確認）
           if ! [[ "$OCCUPIED_SEATS" =~ ^[0-9]+$ ]]; then
             echo "⚠️ 占有席数が数値ではありません: $OCCUPIED_SEATS"
-            OCCUPIED_SEATS=1  # デフォルト値を設定
+            echo "⚠️ 記録をスキップします"
+            exit 0
           fi
 
-          # データが有効な場合のみ記録（常に記録するように条件を緩和）
-          if true; then
+          # 席の更新がない日（占有席数が0かつ、社内人口密度率が0の場合）は記録しない
+          if [ "$OCCUPIED_SEATS" -eq 0 ] && (( $(echo "$DENSITY_RATE == 0" | bc -l) )); then
+            echo "ℹ️ 占有席数と密度率が共に0のため、記録をスキップします"
+            exit 0
+          fi
+
+          # データを記録
+          if [ "$OCCUPIED_SEATS" -gt 0 ] || (( $(echo "$DENSITY_RATE > 0" | bc -l) )); then
             echo "📝 記録を開始します..."
             
             # テーブル構造を確認
@@ -129,12 +139,43 @@ jobs:
             
             # カラムデータ型に合わせてリクエストボディを作成
             # day_of_week: 整数、occupied_seats: 整数、density_rate: 浮動小数点数
+            
+            # 占有席数は実際の値をそのまま使用
+            echo "🪑 実際の占有席数を使用: $OCCUPIED_SEATS"
+            
+            # 現在の曜日が不正な場合、現在の日付から再計算
+            if [ "$DAY_OF_WEEK" -lt 0 ] || [ "$DAY_OF_WEEK" -gt 6 ]; then
+              DAY_OF_WEEK=$(date +%u)
+              # dateコマンドは月曜日が1、日曜日が7なので、日曜日を0に調整
+              if [ "$DAY_OF_WEEK" -eq 7 ]; then
+                DAY_OF_WEEK=0
+              else
+                # dateの出力を-1して0-6の範囲に調整
+                DAY_OF_WEEK=$((DAY_OF_WEEK - 1))
+              fi
+              echo "⚠️ 曜日が不正なため、再計算しました: $DAY_OF_WEEK"
+            fi
+            
+            # 密度率が不正な場合は補正
+            if (( $(echo "$DENSITY_RATE > 100" | bc -l) )) || (( $(echo "$DENSITY_RATE < 0" | bc -l) )); then
+              DENSITY_RATE=50.0
+              echo "⚠️ 密度率が範囲外のため、デフォルト値(50.0)を使用します"
+            fi
+            
             REQUEST_BODY="{
               \"day_of_week\": $DAY_OF_WEEK,
               \"occupied_seats\": $OCCUPIED_SEATS,
               \"density_rate\": $DENSITY_RATE
             }"
             echo "リクエストボディ: $REQUEST_BODY"
+            
+            # テーブルが存在するか確認するための代替手段
+            echo "🔍 テーブル一覧を確認します..."
+            TABLES_LIST=$(curl -s -X GET \
+              "${SUPABASE_URL}/rest/v1/?apikey=${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}")
+            echo "使用可能なテーブル: $TABLES_LIST"
             
             # テーブルが存在するか確認するための代替手段
             echo "🔍 テーブル一覧を確認します..."
