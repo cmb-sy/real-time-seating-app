@@ -21,20 +21,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // デバッグ用: 環境変数の存在確認
-    const authUsername = process.env.AUTH_USERNAME;
-    const authPasswordHash = process.env.AUTH_PASSWORD_HASH;
-
-    // 本番環境でのデバッグ（一時的）
-    if (process.env.NODE_ENV === "production") {
-      console.log("Production Debug - Environment variables check:", {
-        hasAuthUsername: !!authUsername,
-        hasAuthPasswordHash: !!authPasswordHash,
-        authUsernameLength: authUsername?.length || 0,
-        authPasswordHashPrefix: authPasswordHash?.substring(0, 10) || "none",
-      });
-    }
-
     // Authorization ヘッダーを取得
     const authorizationHeader = request.headers.get("authorization");
 
@@ -76,22 +62,13 @@ export async function middleware(request: NextRequest) {
       });
     }
 
-    // 本番環境でのデバッグ（一時的）
-    if (process.env.NODE_ENV === "production") {
-      console.log("Production Debug - Credentials received:", {
-        username: username,
-        passwordLength: password?.length || 0,
-        expectedUsername: authUsername,
-      });
-    }
-
     // 環境変数で認証
+    const authUsername = process.env.AUTH_USERNAME;
+    const authPasswordHash = process.env.AUTH_PASSWORD_HASH;
+
     if (authUsername && authPasswordHash) {
       // ユーザー名の確認
       if (username !== authUsername) {
-        if (process.env.NODE_ENV === "production") {
-          console.log("Production Debug - Username mismatch");
-        }
         return new NextResponse("Invalid credentials", {
           status: 401,
           headers: {
@@ -109,15 +86,6 @@ export async function middleware(request: NextRequest) {
           authPasswordHash
         );
 
-        // 本番環境でのデバッグ（一時的）
-        if (process.env.NODE_ENV === "production") {
-          console.log("Production Debug - Password validation:", {
-            isValid: isPasswordValid,
-            providedPassword: password,
-            hashPrefix: authPasswordHash.substring(0, 15),
-          });
-        }
-
         if (!isPasswordValid) {
           return new NextResponse("Invalid credentials", {
             status: 401,
@@ -130,9 +98,6 @@ export async function middleware(request: NextRequest) {
 
         return NextResponse.next();
       } catch (bcryptError) {
-        if (process.env.NODE_ENV === "production") {
-          console.error("Production Debug - bcrypt error:", bcryptError);
-        }
         return new NextResponse("Authentication error", {
           status: 401,
           headers: {
@@ -163,9 +128,6 @@ export async function middleware(request: NextRequest) {
         });
 
         if (error) {
-          if (process.env.NODE_ENV === "production") {
-            console.log("Production Debug - Supabase error:", error);
-          }
           return new NextResponse("Invalid credentials", {
             status: 401,
             headers: {
@@ -187,12 +149,6 @@ export async function middleware(request: NextRequest) {
           });
         }
       } catch (supabaseError) {
-        if (process.env.NODE_ENV === "production") {
-          console.error(
-            "Production Debug - Supabase connection error:",
-            supabaseError
-          );
-        }
         return new NextResponse("Authentication required", {
           status: 401,
           headers: {
@@ -204,9 +160,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // 認証情報が全く設定されていない場合
-    if (process.env.NODE_ENV === "production") {
-      console.log("Production Debug - No authentication method available");
-    }
     return new NextResponse("Authentication required", {
       status: 401,
       headers: {
@@ -215,9 +168,6 @@ export async function middleware(request: NextRequest) {
       },
     });
   } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      console.error("Production Debug - Middleware error:", error);
-    }
     return new NextResponse("Authentication required", {
       status: 401,
       headers: {
