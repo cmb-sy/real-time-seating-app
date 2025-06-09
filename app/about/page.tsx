@@ -38,7 +38,6 @@ export default function AboutPage() {
             <ul className="list-disc list-inside space-y-2">
               <li>混雑具合と社内人口密度率の予測機能</li>
               <li>完全レスポンシブ対応</li>
-              <li>セキュリティ強化</li>
               <li>投げ銭させる機能（冗談）</li>
             </ul>
           </section>

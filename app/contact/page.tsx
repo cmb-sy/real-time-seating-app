@@ -146,14 +146,6 @@ export default function ContactPage() {
                   </span>
                 )}
               </Button>
-
-              <div className="text-sm text-gray-600 mt-4">
-                <p>
-                  * 必須項目
-                  <br />
-                  送信されたご要望は、管理者メールアドレスに送信されます。
-                </p>
-              </div>
             </form>
           )}
         </section>

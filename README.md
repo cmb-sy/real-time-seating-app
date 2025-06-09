@@ -9,6 +9,8 @@ A real-time seat information system that helps users check seat availability ins
 - Seat reservation system
 - Automatic daily seat reset at 21:00
 - Density indicator for space utilization
+- Basic authentication for access control
+- Contact form using SSGform service
 
 ## Requirements
 
@@ -40,6 +42,8 @@ A real-time seat information system that helps users check seat availability ins
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    RESET_API_KEY=your_reset_api_key
+   AUTH_USERNAME=your_auth_username
+   AUTH_PASSWORD_HASH=your_bcrypt_hashed_password
    ```
 
 4. Set up Supabase:
@@ -58,9 +62,27 @@ A real-time seat information system that helps users check seat availability ins
 
 6. Access the application at http://localhost:3000
 
+## Basic Authentication
+
+The application includes Basic authentication:
+
+- Password hash should be generated using bcrypt
+- Default username can be changed in settings
+- Authentication credentials are managed via environment variables
+
+## Contact Form
+
+The contact form uses [SSGform](https://ssgform.com/):
+
+- No complex email setup required
+- Spam filter protection included
+- High delivery reliability
+
+For detailed information, refer to the SSGform integration documentation.
+
 ## Automatic Seat Reset Configuration
 
-This application includes an automatic seat reset feature that runs daily at 21:00. To configure it:
+This application includes an automatic seat reset feature that runs daily at 21:00:
 
 1. Deploy your application to your preferred hosting provider
 
