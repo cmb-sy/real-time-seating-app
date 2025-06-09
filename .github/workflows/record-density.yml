@@ -11,194 +11,65 @@ jobs:
   record-density:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install additional tools
+      - name: Install jq and bc
         run: sudo apt-get update && sudo apt-get install -y jq bc
-
-      - name: Check required secrets
-        run: |
-          if [ -z "${{ secrets.SUPABASE_URL }}" ]; then
-            echo "⚠️ 警告: SUPABASE_URL シークレットが設定されていません"
-            exit 1
-          fi
-
-          if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
-            echo "⚠️ 警告: SUPABASE_SERVICE_ROLE_KEY シークレットが設定されていません"
-            exit 1
-          fi
-
-          echo "✅ 必要なシークレットが設定されています"
 
       - name: Record density data
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          echo "🔍 デバッグ情報:"
-          echo "Supabase URL: 設定されています"
-          echo "Service Role Key length: ${#SUPABASE_SERVICE_ROLE_KEY}"
+          # シークレットの存在確認
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "エラー: Supabase認証情報が設定されていません"
+            exit 1
+          fi
 
           # 現在の曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
           DAY_OF_WEEK=$(node -e "console.log(new Date().getDay())")
 
-          # 曜日名を取得（デバッグ用）
-          DAY_NAME=$(node -e "const days = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日']; console.log(days[new Date().getDay()])")
-          echo "📅 曜日: $DAY_OF_WEEK ($DAY_NAME)"
-
-          # 占有席数を取得
-          echo "🪑 占有席数を取得中..."
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "⚠️ Supabase認証情報が不足しています。環境変数を確認してください。"
-            exit 1
-          fi
-
-          OCCUPIED_SEATS_RESPONSE=$(curl -s -X GET \
-            "${SUPABASE_URL}/rest/v1/seats?select=count&is_occupied=eq.true" \
+          # 占有席数を取得（正しいSupabaseクエリを使用）
+          OCCUPIED_SEATS=$(curl -s \
+            "${SUPABASE_URL}/rest/v1/seats?select=*&is_occupied=eq.true" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: count=exact")
-
-          # レスポンスが空かどうかチェック
-          if [ -z "$OCCUPIED_SEATS_RESPONSE" ]; then
-            echo "⚠️ API応答が空です。Supabase URLとアクセスキーを確認してください。"
-            exit 1
-          fi
-
-          echo "占有席数レスポンス: $OCCUPIED_SEATS_RESPONSE"
-
-          # jqコマンドが利用可能かチェック
-          if ! command -v jq &> /dev/null; then
-            echo "⚠️ jqコマンドが見つかりません。インストールしてください。"
-            OCCUPIED_SEATS=0
-          else
-            OCCUPIED_SEATS=$(echo $OCCUPIED_SEATS_RESPONSE | jq -r '.count' 2>/dev/null || echo 0)
-          fi
-          echo "🪑 占有席数: $OCCUPIED_SEATS"
+            -H "Content-Type: application/json" | \
+            jq 'length')
 
           # 密度率を取得
-          echo "📊 密度率を取得中..."
-          DENSITY_RATE_RESPONSE=$(curl -s -X GET \
+          DENSITY_RATE=$(curl -s \
             "${SUPABASE_URL}/rest/v1/settings?key=eq.density" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: return=representation")
+            -H "Content-Type: application/json" | \
+            jq -r '.[0].value // 0')
 
-          echo "密度率レスポンス: $DENSITY_RATE_RESPONSE"
+          echo "曜日: $DAY_OF_WEEK, 占有席数: $OCCUPIED_SEATS, 密度率: $DENSITY_RATE"
 
-          # レスポンスが空か配列がない場合のエラーハンドリング
-          if [ -z "$DENSITY_RATE_RESPONSE" ] || [ "$DENSITY_RATE_RESPONSE" = "[]" ]; then
-            echo "⚠️ 密度率データが取得できませんでした"
-            DENSITY_RATE=0  # 密度率データがない場合は0とする
-          else
-            DENSITY_RATE=$(echo $DENSITY_RATE_RESPONSE | jq -r '.[0].value // "50.0"')
-            # 数値であることを確認
-            if ! [[ $DENSITY_RATE =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-              echo "⚠️ 密度率の形式が不正です: $DENSITY_RATE"
-              DENSITY_RATE=50.0  # 不正な値の場合はデフォルト値を使用
-            fi
-          fi
-          echo "📊 密度率: $DENSITY_RATE"
-
-          # データが有効かチェック（OCCUPIED_SEATSが数値であることを確認）
-          if ! [[ "$OCCUPIED_SEATS" =~ ^[0-9]+$ ]]; then
-            echo "⚠️ 占有席数が数値ではありません: $OCCUPIED_SEATS"
-            echo "⚠️ 記録をスキップします"
-            exit 0
+          # データ検証
+          if ! [[ "$OCCUPIED_SEATS" =~ ^[0-9]+$ ]] || ! [[ "$DENSITY_RATE" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "エラー: データ形式が不正です"
+            exit 1
           fi
 
-          # 席の更新がない日（占有席数が0かつ、社内人口密度率が0の場合）は記録しない
-          if [ "$OCCUPIED_SEATS" -eq 0 ] && (( $(echo "$DENSITY_RATE == 0" | bc -l) )); then
-            echo "ℹ️ 占有席数と密度率が共に0のため、記録をスキップします"
-            exit 0
-          fi
-
-          # データを記録
-          if [ "$OCCUPIED_SEATS" -gt 0 ] || (( $(echo "$DENSITY_RATE > 0" | bc -l) )); then
-            echo "📝 記録を開始します..."
-            
-            # テーブル構造を確認
-            echo "🔎 テーブル構造を確認します..."
-            TABLE_INFO=$(curl -s -X GET \
-              "${SUPABASE_URL}/rest/v1/density_history?limit=0" \
-              -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Content-Type: application/json")
-            echo "テーブル情報: $TABLE_INFO"
-            
-            # カラムデータ型に合わせてリクエストボディを作成
-            # day_of_week: 整数、occupied_seats: 整数、density_rate: 浮動小数点数
-            
-            # 占有席数は実際の値をそのまま使用
-            echo "🪑 実際の占有席数を使用: $OCCUPIED_SEATS"
-            
-            # 現在の曜日が不正な場合、現在の日付から再計算
-            if [ "$DAY_OF_WEEK" -lt 0 ] || [ "$DAY_OF_WEEK" -gt 6 ]; then
-              DAY_OF_WEEK=$(date +%u)
-              # dateコマンドは月曜日が1、日曜日が7なので、日曜日を0に調整
-              if [ "$DAY_OF_WEEK" -eq 7 ]; then
-                DAY_OF_WEEK=0
-              else
-                # dateの出力を-1して0-6の範囲に調整
-                DAY_OF_WEEK=$((DAY_OF_WEEK - 1))
-              fi
-              echo "⚠️ 曜日が不正なため、再計算しました: $DAY_OF_WEEK"
-            fi
-            
-            # 密度率が不正な場合は補正
-            if (( $(echo "$DENSITY_RATE > 100" | bc -l) )) || (( $(echo "$DENSITY_RATE < 0" | bc -l) )); then
-              DENSITY_RATE=50.0
-              echo "⚠️ 密度率が範囲外のため、デフォルト値(50.0)を使用します"
-            fi
-            
-            REQUEST_BODY="{
-              \"day_of_week\": $DAY_OF_WEEK,
-              \"occupied_seats\": $OCCUPIED_SEATS,
-              \"density_rate\": $DENSITY_RATE
-            }"
-            echo "リクエストボディ: $REQUEST_BODY"
-            
-            # テーブルが存在するか確認するための代替手段
-            echo "🔍 テーブル一覧を確認します..."
-            TABLES_LIST=$(curl -s -X GET \
-              "${SUPABASE_URL}/rest/v1/?apikey=${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}")
-            echo "使用可能なテーブル: $TABLES_LIST"
-            
-            # テーブルが存在するか確認するための代替手段
-            echo "🔍 テーブル一覧を確認します..."
-            TABLES_LIST=$(curl -s -X GET \
-              "${SUPABASE_URL}/rest/v1/?apikey=${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}")
-            echo "使用可能なテーブル: $TABLES_LIST"
-            
-            # データを記録（詳細なデバッグ情報付き）
-            echo "📝 データを記録します..."
-            RECORD_RESPONSE=$(curl -v -X POST \
+          # データを記録（占有席数または密度率が0でない場合のみ）
+          if [ "$OCCUPIED_SEATS" -gt 0 ] || [ "$(echo "$DENSITY_RATE > 0" | bc)" -eq 1 ]; then
+            curl -s -X POST \
               "${SUPABASE_URL}/rest/v1/density_history" \
               -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
               -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
               -H "Content-Type: application/json" \
-              -H "Prefer: return=representation" \
-              -d "$REQUEST_BODY" 2>&1)
-            echo "記録レスポンス: $RECORD_RESPONSE"
-            
-            echo "✅ データの記録が完了しました"
+              -d "{
+                \"day_of_week\": $DAY_OF_WEEK,
+                \"occupied_seats\": $OCCUPIED_SEATS,
+                \"density_rate\": $DENSITY_RATE
+              }"
+            echo "データを記録しました: 占有席数=$OCCUPIED_SEATS, 密度率=$DENSITY_RATE"
           else
-            echo "⚠️ 記録条件を満たしていません"
-            echo "占有席数: $OCCUPIED_SEATS"
-            echo "密度率: $DENSITY_RATE"
+            echo "占有席数と密度率が共に0のため、記録をスキップしました"
           fi
