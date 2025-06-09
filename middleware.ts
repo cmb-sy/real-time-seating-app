@@ -65,7 +65,7 @@ export async function middleware(request: NextRequest) {
         });
 
         if (error) {
-          return new NextResponse("Authentication error", {
+          return new NextResponse("Invalid credentials", {
             status: 401,
             headers: {
               "WWW-Authenticate": 'Basic realm="Secure Area"',
@@ -120,15 +120,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // 認証情報が設定されていない場合
-    return new NextResponse("Authentication not configured", {
-      status: 500,
+    // 認証情報が設定されていない場合も401エラーで認証プロンプトを表示
+    return new NextResponse("Authentication required", {
+      status: 401,
       headers: {
+        "WWW-Authenticate": 'Basic realm="Secure Area"',
         "Content-Type": "text/plain; charset=utf-8",
       },
     });
   } catch (error) {
-    return new NextResponse("Authentication error", {
+    return new NextResponse("Invalid credentials", {
       status: 401,
       headers: {
         "WWW-Authenticate": 'Basic realm="Secure Area"',
