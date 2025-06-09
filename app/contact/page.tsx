@@ -56,16 +56,33 @@ export default function ContactPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "送信に失敗しました");
+        console.error("APIエラー:", errorData);
+
+        let errorMessage = errorData.error || "送信に失敗しました";
+        if (errorData.details) {
+          errorMessage += `\n詳細: ${errorData.details}`;
+        }
+
+        throw new Error(errorMessage);
       }
+
+      const responseData = await response.json();
+      console.log("API成功:", responseData);
 
       // 成功した場合の処理
       setIsSubmitted(true);
       form.reset();
+
+      // デバッグ情報がある場合は表示
+      if (responseData.debug) {
+        console.log("デバッグ情報:", responseData.debug);
+      }
     } catch (error) {
       console.error("送信エラー:", error);
       alert(
-        "メールの送信に失敗しました。しばらく経ってから再度お試しください。"
+        `送信に失敗しました:\n${
+          error instanceof Error ? error.message : "不明なエラー"
+        }`
       );
     } finally {
       setIsSubmitting(false);

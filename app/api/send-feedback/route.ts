@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 
@@ -11,104 +10,80 @@ const feedbackSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // Step 1: データ受信テスト
     const body = await request.json();
 
-    // 入力データのバリデーション
+    // Step 2: バリデーションテスト
     const result = feedbackSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: "Invalid input data", details: result.error.format() },
+        { error: "バリデーションエラー", details: result.error.format() },
         { status: 400 }
       );
     }
 
     const { name, message } = result.data;
 
-    // loginテーブルからメールアドレスを取得
-    const { data: loginData, error: loginError } = await supabase
-      .from("login")
-      .select("mail")
-      .eq("id", "armdx")
-      .single();
-
-    if (loginError) {
-      console.error("管理者メール取得エラー:", loginError);
-      return NextResponse.json(
-        { error: "管理者情報の取得に失敗しました" },
-        { status: 500 }
-      );
-    }
-
-    if (!loginData?.mail) {
-      console.error("管理者のメールアドレスが設定されていません");
-      return NextResponse.json(
-        { error: "管理者のメールアドレスが設定されていません" },
-        { status: 500 }
-      );
-    }
-
-    const adminEmail = loginData.mail;
-
-    // メール送信の設定
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.example.com",
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER || "user@example.com",
-        pass: process.env.SMTP_PASSWORD || "password",
-      },
-    });
-
-    // 管理者向けメール設定
-    const mailOptions = {
-      from: process.env.MAIL_FROM || "noreply@seatmanagement.example.com",
-      to: adminEmail, // loginテーブルから取得したメールアドレスを使用
-      subject: `【座席管理システム】機能改善要望: ${name}様より`,
-      text: `
-名前: ${name}
-
-【要望内容】
-${message}
-      `,
-      html: `
-<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-  <h2 style="color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">座席管理システム - 機能改善要望</h2>
-  
-  <div style="margin: 20px 0;">
-    <p><strong>送信者:</strong> ${name}</p>
-  </div>
-  
-  <div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 5px;">
-    <h3 style="margin-top: 0; color: #555;">要望内容:</h3>
-    <p style="white-space: pre-line;">${message}</p>
-  </div>
-  
-  <p style="color: #777; font-size: 0.9em; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">
-    このメールは座席管理システムから自動送信されています。<br>
-    送信先: ${adminEmail}
-  </p>
-</div>
-      `,
-    };
-
+    // Step 3: Supabase接続テスト
     try {
-      // 管理者宛メールのみ送信
-      await transporter.sendMail(mailOptions);
-      console.log(`メールを送信しました: ${adminEmail} 宛て`);
-    } catch (mailError) {
-      console.error("メール送信エラー:", mailError);
-      throw mailError;
-    }
+      const { data: loginData, error: loginError } = await supabase
+        .from("login")
+        .select("mail")
+        .eq("id", "armdx")
+        .single();
 
-    return NextResponse.json({
-      success: true,
-      message: `要望が正常に送信されました（送信先: ${adminEmail}）`,
-    });
+      if (loginError) {
+        return NextResponse.json(
+          {
+            error: "Supabaseエラー",
+            details: loginError.message,
+            code: loginError.code,
+          },
+          { status: 500 }
+        );
+      }
+
+      if (!loginData?.mail) {
+        return NextResponse.json(
+          {
+            error: "メールアドレス未設定",
+            details: "loginテーブルのmailカラムが空です",
+            loginData: loginData,
+          },
+          { status: 500 }
+        );
+      }
+
+      // Step 4: 成功レスポンス（実際のメール送信はスキップ）
+      return NextResponse.json({
+        success: true,
+        message: `テスト成功: 要望を受け付けました`,
+        debug: {
+          name: name,
+          messageLength: message.length,
+          adminEmail: loginData.mail,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (supabaseError) {
+      return NextResponse.json(
+        {
+          error: "Supabase接続エラー",
+          details:
+            supabaseError instanceof Error
+              ? supabaseError.message
+              : "不明なエラー",
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error("メール送信エラー:", error);
     return NextResponse.json(
-      { error: "メール送信に失敗しました" },
+      {
+        error: "API全体エラー",
+        details: error instanceof Error ? error.message : "不明なエラー",
+        stack: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }
