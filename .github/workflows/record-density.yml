@@ -30,8 +30,13 @@ jobs:
             exit 1
           fi
 
-          # 現在の曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
-          DAY_OF_WEEK=$(node -e "console.log(new Date().getDay())")
+          # 日本時間での曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
+          DAY_OF_WEEK=$(node -e "
+            const now = new Date();
+            const jstOffset = 9 * 60; // JSTはUTC+9時間
+            const jstTime = new Date(now.getTime() + jstOffset * 60 * 1000);
+            console.log(jstTime.getDay());
+          ")
 
           # 占有席数を取得（正しいSupabaseクエリを使用）
           OCCUPIED_SEATS=$(curl -s \
