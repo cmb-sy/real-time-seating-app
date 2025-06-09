@@ -8,7 +8,7 @@ const handler = NextAuth({
       name: "Credentials",
       credentials: {
         username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
@@ -16,33 +16,35 @@ const handler = NextAuth({
         }
 
         try {
-          const { data, error } = await supabase
-            .from('login')
-            .select('id, pass')
-            .eq('id', credentials.username)
-            .filter('pass', 'eq', supabase.rpc('crypt', {
-              password: credentials.password,
-              salt: supabase.from('login').select('pass').eq('id', credentials.username).single()
-            }))
-            .single();
+          // パスワード検証用の関数を呼び出し
+          const { data, error } = await supabase.rpc("verify_password", {
+            username: credentials.username,
+            password: credentials.password,
+          });
 
-          if (error || !data) {
+          if (error) {
+            console.error("認証エラー:", error);
             return null;
           }
 
-          return {
-            id: data.id,
-            name: data.id,
-          };
+          // パスワードが正しい場合
+          if (data === true) {
+            return {
+              id: credentials.username,
+              name: credentials.username,
+            };
+          }
+
+          return null;
         } catch (error) {
-          console.error('認証エラー:', error);
+          console.error("認証エラー:", error);
           return null;
         }
-      }
-    })
+      },
+    }),
   ],
   pages: {
-    signIn: '/auth/signin',
+    signIn: "/auth/signin",
   },
   session: {
     strategy: "jwt",
@@ -59,8 +61,8 @@ const handler = NextAuth({
         session.user.id = token.id as string;
       }
       return session;
-    }
-  }
+    },
+  },
 });
 
-export { handler as GET, handler as POST }; 
+export { handler as GET, handler as POST };
