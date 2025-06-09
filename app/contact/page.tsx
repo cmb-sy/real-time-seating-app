@@ -4,90 +4,42 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Send } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-
-// フォームのスキーマを定義
-const formSchema = z.object({
-  name: z.string().min(1, {
-    message: "名前を入力してください",
-  }),
-  message: z.string().min(10, {
-    message: "メッセージは最低10文字以上入力してください",
-  }),
-});
+import { Label } from "@/components/ui/label";
 
 export default function ContactPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // フォームの状態を管理
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      message: "",
-    },
-  });
-
-  // フォーム送信時の処理
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  // フォーム送信のハンドリング
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
 
+    const formData = new FormData(e.currentTarget);
+
     try {
-      // APIエンドポイントにPOSTリクエストを送信
-      const response = await fetch("/api/send-feedback", {
+      // SSGformに送信
+      const response = await fetch("https://ssgform.com/s/9TBp9oe5J3wt", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: formData,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("APIエラー:", errorData);
-
-        let errorMessage = errorData.error || "送信に失敗しました";
-        if (errorData.details) {
-          errorMessage += `\n詳細: ${errorData.details}`;
-        }
-
-        throw new Error(errorMessage);
-      }
-
-      const responseData = await response.json();
-      console.log("API成功:", responseData);
-
-      // 成功した場合の処理
-      setIsSubmitted(true);
-      form.reset();
-
-      // デバッグ情報がある場合は表示
-      if (responseData.debug) {
-        console.log("デバッグ情報:", responseData.debug);
+      if (response.ok) {
+        setIsSubmitted(true);
+        // フォームをリセット
+        (e.target as HTMLFormElement).reset();
+      } else {
+        throw new Error("送信に失敗しました");
       }
     } catch (error) {
       console.error("送信エラー:", error);
-      alert(
-        `送信に失敗しました:\n${
-          error instanceof Error ? error.message : "不明なエラー"
-        }`
-      );
+      alert("送信に失敗しました。しばらく経ってから再度お試しください。");
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-white p-8">
@@ -107,9 +59,7 @@ export default function ContactPage() {
 
         {/* お問い合わせフォームセクション */}
         <section className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-5">
-            機能改善のご要望(まだ使えません)
-          </h2>
+          <h2 className="text-xl font-semibold mb-5">機能改善のご要望</h2>
           {isSubmitted ? (
             <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-md">
               <p className="font-medium">ご要望を受け付けました</p>
@@ -125,81 +75,86 @@ export default function ContactPage() {
               </Button>
             </div>
           ) : (
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                <FormField
-                  control={form.control}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">お名前 *</Label>
+                <Input
+                  id="name"
                   name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>お名前</FormLabel>
-                      <FormControl>
-                        <Input placeholder="山田太郎" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  type="text"
+                  placeholder="山田太郎"
+                  required
                 />
+              </div>
 
-                <FormField
-                  control={form.control}
+              <div className="space-y-2">
+                <Label htmlFor="message">ご要望内容 *</Label>
+                <Textarea
+                  id="message"
                   name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ご要望内容</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="希望する機能や改善点についてご記入ください(e.g. システム重すぎ直せよタコ)"
-                          className="min-h-[120px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  placeholder="希望する機能や改善点についてご記入ください"
+                  className="min-h-[120px]"
+                  required
                 />
+              </div>
 
-                <Button
-                  type="submit"
-                  className="w-full sm:w-auto"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      送信中...
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      <Send className="w-4 h-4 mr-2" />
-                      要望を送信する
-                    </span>
-                  )}
-                </Button>
-              </form>
-            </Form>
+              {/* SSGform用の隠しフィールド */}
+              <input
+                type="hidden"
+                name="form_type"
+                value="座席管理システム要望"
+              />
+              <input
+                type="hidden"
+                name="timestamp"
+                value={new Date().toISOString()}
+              />
+
+              <Button
+                type="submit"
+                className="w-full sm:w-auto"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    送信中...
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <Send className="w-4 h-4 mr-2" />
+                    要望を送信する
+                  </span>
+                )}
+              </Button>
+
+              <div className="text-sm text-gray-600 mt-4">
+                <p>
+                  * 必須項目
+                  <br />
+                  送信されたご要望は、管理者メールアドレスに送信されます。
+                </p>
+              </div>
+            </form>
           )}
         </section>
       </div>

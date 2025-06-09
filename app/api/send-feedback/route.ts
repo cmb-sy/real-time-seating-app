@@ -1,4 +1,22 @@
+// このAPIエンドポイントはSSGformの使用により不要になりました
+// SSGform URL: https://ssgform.com/s/9TBp9oe5J3wt
+
 import { NextResponse } from "next/server";
+
+export async function POST(request: Request) {
+  return NextResponse.json(
+    {
+      message:
+        "このエンドポイントは無効化されています。SSGformを使用してください。",
+      ssgformUrl: "https://ssgform.com/s/9TBp9oe5J3wt",
+    },
+    { status: 200 }
+  );
+}
+
+/*
+// 以下は元のメール送信コード（SSGform使用により不要）
+
 import nodemailer from "nodemailer";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
@@ -173,3 +191,4 @@ ${message}
     );
   }
 }
+*/
