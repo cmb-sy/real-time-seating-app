@@ -25,13 +25,12 @@ jobs:
       - name: Reset seats data
         run: |
           echo "リセットAPIを呼び出します..."
-          RESPONSE=$(curl -L -X POST "${{ secrets.RESET_API_ENDPOINT }}/api/reset-seats" \
+          RESPONSE=$(curl -s -X POST "${{ secrets.RESET_API_ENDPOINT }}" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Basic ${{ secrets.RESET_API_KEY }}" \
-            -d '{}')
+            -d "{\"authorization\": \"${{ secrets.RESET_API_KEY }}\"}")
           echo "API Response: $RESPONSE"
 
-          if echo "$RESPONSE" | grep -q "success\":true"; then
+          if echo "$RESPONSE" | grep -q "\"success\":true"; then
             echo "✅ 座席リセットが完了しました"
             exit 0
           else

@@ -56,9 +56,25 @@ jobs:
 
           echo "曜日: $DAY_OF_WEEK, 占有席数: $OCCUPIED_SEATS, 密度率: $DENSITY_RATE"
 
-          # データ検証
+          # データ検証（CHECK制約に準拠）
           if ! [[ "$OCCUPIED_SEATS" =~ ^[0-9]+$ ]] || ! [[ "$DENSITY_RATE" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
             echo "エラー: データ形式が不正です"
+            exit 1
+          fi
+
+          # CHECK制約の範囲内であることを確認
+          if [ "$DAY_OF_WEEK" -lt 0 ] || [ "$DAY_OF_WEEK" -gt 6 ]; then
+            echo "エラー: 曜日が範囲外です (0-6): $DAY_OF_WEEK"
+            exit 1
+          fi
+
+          if [ "$OCCUPIED_SEATS" -lt 0 ] || [ "$OCCUPIED_SEATS" -gt 8 ]; then
+            echo "エラー: 占有席数が範囲外です (0-8): $OCCUPIED_SEATS"
+            exit 1
+          fi
+
+          if [ "$(echo "$DENSITY_RATE < 0" | bc)" -eq 1 ] || [ "$(echo "$DENSITY_RATE > 100" | bc)" -eq 1 ]; then
+            echo "エラー: 密度率が範囲外です (0-100): $DENSITY_RATE"
             exit 1
           fi
 
