@@ -15,15 +15,22 @@ jobs:
         run: |
           echo "API Endpoint: ${{ secrets.RESET_API_ENDPOINT }}"
           echo "API Key length: ${#RESET_API_KEY}"
-      
+          # APIキーがBase64形式かを確認
+          if [[ "${{ secrets.RESET_API_KEY }}" =~ ^[A-Za-z0-9+/=]+$ ]]; then
+            echo "API Key format: Valid Base64 format"
+          else
+            echo "API Key format: Not in Base64 format"
+          fi
+
       - name: Reset seats data
         run: |
           echo "リセットAPIを呼び出します..."
-          RESPONSE=$(curl -L -v -X POST "${{ secrets.RESET_API_ENDPOINT }}/api/reset-seats" \
+          RESPONSE=$(curl -L -X POST "${{ secrets.RESET_API_ENDPOINT }}/api/reset-seats" \
             -H "Content-Type: application/json" \
-            -d '{"authorization":"${{ secrets.RESET_API_KEY }}"}')
+            -H "Authorization: Basic ${{ secrets.RESET_API_KEY }}" \
+            -d '{}')
           echo "API Response: $RESPONSE"
-          
+
           if echo "$RESPONSE" | grep -q "success\":true"; then
             echo "✅ 座席リセットが完了しました"
             exit 0

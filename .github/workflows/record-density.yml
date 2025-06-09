@@ -17,10 +17,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install dependencies
         run: npm install
+
+      - name: Install additional tools
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.SUPABASE_URL }}" ]; then
+            echo "⚠️ 警告: SUPABASE_URL シークレットが設定されていません"
+            exit 1
+          fi
+
+          if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+            echo "⚠️ 警告: SUPABASE_SERVICE_ROLE_KEY シークレットが設定されていません"
+            exit 1
+          fi
+
+          echo "✅ 必要なシークレットが設定されています"
 
       - name: Record density data
         env:
@@ -28,46 +45,73 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           echo "🔍 デバッグ情報:"
-          echo "Supabase URL: ${{ secrets.SUPABASE_URL }}"
+          echo "Supabase URL: 設定されています"
           echo "Service Role Key length: ${#SUPABASE_SERVICE_ROLE_KEY}"
-          
+
           # 現在の曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
           DAY_OF_WEEK=$(node -e "console.log(new Date().getDay())")
           echo "📅 曜日: $DAY_OF_WEEK"
-          
+
           # 占有席数を取得
           echo "🪑 占有席数を取得中..."
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "⚠️ Supabase認証情報が不足しています。環境変数を確認してください。"
+            exit 1
+          fi
+
           OCCUPIED_SEATS_RESPONSE=$(curl -s -X GET \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/seats?select=count&is_occupied=eq.true" \
-            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            "${SUPABASE_URL}/rest/v1/seats?select=count&is_occupied=eq.true" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json" \
             -H "Prefer: count=exact")
+
+          # レスポンスが空かどうかチェック
+          if [ -z "$OCCUPIED_SEATS_RESPONSE" ]; then
+            echo "⚠️ API応答が空です。Supabase URLとアクセスキーを確認してください。"
+            exit 1
+          fi
+
           echo "占有席数レスポンス: $OCCUPIED_SEATS_RESPONSE"
-          OCCUPIED_SEATS=$(echo $OCCUPIED_SEATS_RESPONSE | jq -r '.count')
+
+          # jqコマンドが利用可能かチェック
+          if ! command -v jq &> /dev/null; then
+            echo "⚠️ jqコマンドが見つかりません。インストールしてください。"
+            OCCUPIED_SEATS=0
+          else
+            OCCUPIED_SEATS=$(echo $OCCUPIED_SEATS_RESPONSE | jq -r '.count' 2>/dev/null || echo 0)
+          fi
           echo "🪑 占有席数: $OCCUPIED_SEATS"
-          
+
           # 密度率を取得
           echo "📊 密度率を取得中..."
           DENSITY_RATE_RESPONSE=$(curl -s -X GET \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/settings?key=eq.density" \
-            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            "${SUPABASE_URL}/rest/v1/settings?key=eq.density" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json" \
             -H "Prefer: return=representation")
+
           echo "密度率レスポンス: $DENSITY_RATE_RESPONSE"
-          DENSITY_RATE=$(echo $DENSITY_RATE_RESPONSE | jq -r '.[0].value')
+
+          # レスポンスが空か配列がない場合のエラーハンドリング
+          if [ -z "$DENSITY_RATE_RESPONSE" ] || [ "$DENSITY_RATE_RESPONSE" = "[]" ]; then
+            echo "⚠️ 密度率データが取得できませんでした"
+            DENSITY_RATE=0
+          else
+            DENSITY_RATE=$(echo $DENSITY_RATE_RESPONSE | jq -r '.[0].value // 0')
+          fi
           echo "📊 密度率: $DENSITY_RATE"
-          
+
           # データが有効な場合のみ記録
           if [ "$OCCUPIED_SEATS" -gt 0 ] && [ "$DENSITY_RATE" != "0" ]; then
             echo "📝 記録を開始します..."
             
             # データを記録
             RECORD_RESPONSE=$(curl -s -X POST \
-              "${{ secrets.SUPABASE_URL }}/rest/v1/density_history" \
-              -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              "${SUPABASE_URL}/rest/v1/density_history" \
+              -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
               -H "Content-Type: application/json" \
               -H "Prefer: return=representation" \
               -d "{
@@ -82,4 +126,4 @@ jobs:
             echo "⚠️ 記録条件を満たしていません"
             echo "占有席数: $OCCUPIED_SEATS"
             echo "密度率: $DENSITY_RATE"
-          fi 
+          fi
