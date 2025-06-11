@@ -82,7 +82,7 @@ export default function ContactPage() {
                   id="name"
                   name="name"
                   type="text"
-                  placeholder="山田太郎"
+                  placeholder="あなたの名前"
                   required
                 />
               </div>

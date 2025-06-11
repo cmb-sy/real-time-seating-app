@@ -148,7 +148,7 @@ export default function AboutPage() {
                     17:00 自動データ連携
                   </h3>
                   <p className="text-sm">
-                    毎日17:00に座席の更新情報と社内人口密度率をデータベースに自動連携します。この定期的なデータ収集により、継続的な分析が可能になります。
+                    座席の更新情報と社内人口密度率の両方に更新があった場合、17:00にデータベースに自動連携します。この条件付きデータ収集により、効率的で意味のある分析が可能になります。
                   </p>
                 </div>
                 <div className="bg-white p-4 rounded-lg border border-blue-200">
