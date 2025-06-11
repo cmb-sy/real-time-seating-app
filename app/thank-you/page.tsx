@@ -65,19 +65,6 @@ export default function ThankYouPage() {
                 みんなのために時間を使ってくださったことに深く感謝しています。
               </p>
             </div>
-
-            <div className="bg-green-50 p-6 rounded-xl border-l-4 border-green-400">
-              <p className="text-base text-green-800 leading-relaxed">
-                <strong>あなたの一つ一つの行動が、</strong>
-                <br />
-                <strong>みんなの働きやすさに繋がっています。</strong>
-              </p>
-              <p className="text-sm text-green-700 mt-2 leading-relaxed">
-                面倒な入力作業も、手間のかかる更新作業も、
-                すべてがオフィス全体の快適さを支えています。
-                本当に、本当にありがとうございます。
-              </p>
-            </div>
           </div>
 
           <div className="bg-blue-50 p-6 rounded-xl mb-8">
@@ -87,7 +74,7 @@ export default function ThankYouPage() {
             <p className="text-blue-700 leading-relaxed">
               皆様の貴重な時間とご協力により、
               <br />
-              快適なオフィス環境を維持することができています。
+              快適なシステムを維持することができています。
               <br />
               <strong>心より感謝申し上げます。</strong>
             </p>
@@ -110,7 +97,7 @@ export default function ThankYouPage() {
             <p className="text-sm text-gray-500 leading-relaxed">
               お忙しい中、手間をかけさせてしまい申し訳ございません。
               <br />
-              今後ともご協力いただけましたら幸いです 🌟
+              今後ともご協力いただけましたら幸いです🙇
               <br />
               <strong>本当にありがとうございました。</strong>
             </p>
