@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Monitor, Users, Clock, CheckCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Monitor,
+  Users,
+  Clock,
+  CheckCircle,
+  BarChart3,
+  Database,
+  TrendingUp,
+} from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -51,6 +60,18 @@ export default function AboutPage() {
                   </p>
                 </div>
               </div>
+
+              <div className="flex items-start gap-4">
+                <BarChart3 className="h-6 w-6 text-teal-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    人口密度率の測定
+                  </h3>
+                  <p className="text-gray-600">
+                    社内の人口密度率をリアルタイムで計測し、オフィスの混雑状況を数値化して把握できます。
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -77,6 +98,18 @@ export default function AboutPage() {
                   </p>
                 </div>
               </div>
+
+              <div className="flex items-start gap-4">
+                <TrendingUp className="h-6 w-6 text-indigo-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    予測・統計分析
+                  </h3>
+                  <p className="text-gray-600">
+                    収集されたデータを基に混雑予測や使用傾向の分析を行い、より効果的なオフィス運用をサポートします。
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -96,6 +129,48 @@ export default function AboutPage() {
                   <strong>注意:</strong>{" "}
                   システムデータは毎日21:00にリセットされます。
                 </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-lg mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Database className="h-6 w-6 text-purple-600" />
+              <h2 className="text-2xl font-bold text-purple-800">
+                データ連携・分析システム
+              </h2>
+            </div>
+            <div className="space-y-4 text-gray-700">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white p-4 rounded-lg border border-purple-200">
+                  <h3 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    17:00 自動データ連携
+                  </h3>
+                  <p className="text-sm">
+                    毎日17:00に座席の更新情報と社内人口密度率をデータベースに自動連携します。この定期的なデータ収集により、継続的な分析が可能になります。
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <h3 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    予測・統計分析
+                  </h3>
+                  <p className="text-sm">
+                    収集されたデータは高度な統計分析に活用され、混雑パターンの予測や最適な座席配置の提案に役立てられます。
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-lg border-l-4 border-purple-400 mt-4">
+                <h4 className="font-semibold text-purple-800 mb-2">
+                  活用データ
+                </h4>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• 座席使用状況の時系列データ</li>
+                  <li>• 社内人口密度率の変動パターン</li>
+                  <li>• 曜日・時間帯別の利用傾向</li>
+                  <li>• 空席予測アルゴリズムの学習データ</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -120,10 +195,6 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="text-gray-700">座席予約機能</span>
-              </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                 <span className="text-gray-700">使用統計とレポート機能</span>

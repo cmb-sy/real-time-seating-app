@@ -14,6 +14,7 @@ import { Menu } from "lucide-react";
 
 // メニュー項目を定数として定義
 const MENU_ITEMS = [
+  { href: "/thank-you", label: "感謝" },
   { href: "/about", label: "当サービスについて" },
   { href: "/contact", label: "機能改善の要望・お問い合わせ" },
 ];
