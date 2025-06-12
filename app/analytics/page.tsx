@@ -232,9 +232,11 @@ export default function AnalyticsPage() {
           {/* ── 左側: タイトルのみ */}
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold text-gray-900">
-              統計分析ダッシュボード
+              統計分析ダッシュボード（ベータ版）
             </h1>
-            <p className="text-sm text-gray-500">ベータ版</p>
+            <p className="text-sm text-gray-500">
+              決定木のアンサンブル学習を用いています。隔週でモデルを更新し予測結果を更新してます。
+            </p>
           </div>
 
           {/* ── 右側: ローディング＆座席画面ボタン */}
@@ -305,7 +307,7 @@ export default function AnalyticsPage() {
                 明日の予測
               </CardTitle>
               <p className="text-sm text-gray-400">
-                {tomorrowDate} ({tomorrowPrediction?.weekday_name || "-"})の予測
+                {tomorrowDate} ({tomorrowPrediction?.weekday_name || "-"}
               </p>
             </CardHeader>
             <CardContent className="p-6">
