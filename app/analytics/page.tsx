@@ -183,15 +183,33 @@ export default function AnalyticsPage() {
           message: data.message,
         };
 
+        // 曜日名を統一する関数
+        const normalizeDayName = (dayName: string): string => {
+          const dayMap: { [key: string]: string } = {
+            月曜日: "月曜",
+            火曜日: "火曜",
+            水曜日: "水曜",
+            木曜日: "木曜",
+            金曜日: "金曜",
+            月曜: "月曜",
+            火曜: "火曜",
+            水曜: "水曜",
+            木曜: "木曜",
+            金曜: "金曜",
+          };
+          return dayMap[dayName] || dayName;
+        };
+
         // 日別予測データを変換
         Object.entries(data.data.daily_predictions || {}).forEach(
           ([day, prediction]: [string, any]) => {
+            const normalizedDay = normalizeDayName(day);
             // predictionsがnullでない場合のみデータを追加
             if (
               prediction.predictions &&
               prediction.predictions.density_rate !== undefined
             ) {
-              transformedData.data.detailed_stats[day] = {
+              transformedData.data.detailed_stats[normalizedDay] = {
                 レコード数: prediction.レコード数 || 1,
                 density_rate: {
                   平均: prediction.predictions.density_rate,
@@ -226,25 +244,16 @@ export default function AnalyticsPage() {
 
         // 新しいAPI形式の週間平均データが存在する場合
         if (data.data.weekly_averages) {
-          // 曜日名を変換するマップ
-          const dayNameMap: { [key: string]: string } = {
-            月曜日: "月曜",
-            火曜日: "火曜",
-            水曜日: "水曜",
-            木曜日: "木曜",
-            金曜日: "金曜",
-          };
-
-          // 週間平均データを変換
+          // 週間平均データを変換（重複チェック付き）
           data.data.weekly_averages.forEach((item: any) => {
-            const dayName = dayNameMap[item.weekday_name] || item.weekday_name;
+            const normalizedDay = normalizeDayName(item.weekday_name);
 
-            // まだ追加されていない曜日がある場合は追加
+            // まだ追加されていない曜日がある場合のみ追加
             if (
-              !transformedData.data.detailed_stats[dayName] &&
+              !transformedData.data.detailed_stats[normalizedDay] &&
               item.prediction
             ) {
-              transformedData.data.detailed_stats[dayName] = {
+              transformedData.data.detailed_stats[normalizedDay] = {
                 レコード数: item.prediction.data_points || 1,
                 density_rate: {
                   平均: item.prediction.occupancy_rate * 100, // 0-1からパーセントに変換
@@ -314,13 +323,28 @@ export default function AnalyticsPage() {
 
   // グラフ用データ整形
   const chartData = weekdayAnalysis?.data
-    ? Object.entries(weekdayAnalysis.data.detailed_stats).map(
-        ([day, stat]) => ({
-          day,
-          density_rate: stat.density_rate.平均,
-          occupied_seats: stat.occupied_seats.平均,
+    ? Object.entries(weekdayAnalysis.data.detailed_stats)
+        .map(([day, stat]) => {
+          // 曜日名から数値への変換
+          const getDayOfWeek = (dayName: string): number => {
+            const dayMap: { [key: string]: number } = {
+              月曜: 0,
+              火曜: 1,
+              水曜: 2,
+              木曜: 3,
+              金曜: 4,
+            };
+            return dayMap[dayName] ?? 5; // 不明な場合は最後に
+          };
+
+          return {
+            day,
+            dayOfWeek: getDayOfWeek(day),
+            density_rate: stat.density_rate.平均,
+            occupied_seats: stat.occupied_seats.平均,
+          };
         })
-      )
+        .sort((a, b) => a.dayOfWeek - b.dayOfWeek) // 曜日順にソート
     : [];
 
   if (apiStatus !== "正常") {
