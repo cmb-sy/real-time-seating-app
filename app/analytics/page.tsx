@@ -97,8 +97,8 @@ export default function AnalyticsPage() {
 
   const testApiConnection = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/health`);
+      // 同じドメインのAPIエンドポイントを使用
+      const response = await fetch(`/api/health`);
       if (response.ok) {
         setApiStatus("正常");
         return true;
@@ -113,38 +113,100 @@ export default function AnalyticsPage() {
     }
   };
 
-  const fetchDayPrediction = async (
-    dayOfWeek: number
-  ): Promise<PredictionResponse | null> => {
+  const fetchTodayTomorrowPredictions = async (): Promise<{
+    today: PredictionResponse | null;
+    tomorrow: PredictionResponse | null;
+  }> => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(
-        `${apiUrl}/ml/predict?day_of_week=${dayOfWeek}`
-      );
+      // 今日と明日の予測データを一度に取得
+      const response = await fetch(`/api/predictions/today-tomorrow`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: PredictionResponse = await response.json();
-      return data;
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        const today = data.data.today?.predictions
+          ? {
+              success: true,
+              day_of_week: data.data.today.day_of_week,
+              weekday_name: data.data.today.weekday_name,
+              predictions: data.data.today.predictions,
+              message: data.message,
+            }
+          : null;
+
+        const tomorrow = data.data.tomorrow?.predictions
+          ? {
+              success: true,
+              day_of_week: data.data.tomorrow.day_of_week,
+              weekday_name: data.data.tomorrow.weekday_name,
+              predictions: data.data.tomorrow.predictions,
+              message: data.message,
+            }
+          : null;
+
+        return { today, tomorrow };
+      }
+
+      return { today: null, tomorrow: null };
     } catch (error) {
       console.error("予測データ取得エラー:", error);
-      return null;
+      return { today: null, tomorrow: null };
     }
   };
 
   const fetchWeekdayAnalysis = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/analysis/weekday_analysis`);
+      // 週平均の予測データを取得
+      const response = await fetch(`/api/predictions/weekly-average`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: WeekdayAnalysisResponse = await response.json();
-      setWeekdayAnalysis(data);
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        // APIレスポンスを既存の形式に変換
+        const transformedData: WeekdayAnalysisResponse = {
+          success: true,
+          data: {
+            detailed_stats: {},
+            summary: {},
+          },
+          message: data.message,
+        };
+
+        // 日別予測データを変換
+        Object.entries(data.data.daily_predictions).forEach(
+          ([day, prediction]: [string, any]) => {
+            transformedData.data.detailed_stats[day] = {
+              レコード数: 1,
+              density_rate: {
+                平均: prediction.predictions.density_rate,
+                中央値: prediction.predictions.density_rate,
+                標準偏差: 0,
+                最小: prediction.predictions.density_rate,
+                最大: prediction.predictions.density_rate,
+              },
+              occupied_seats: {
+                平均: prediction.predictions.occupied_seats,
+                中央値: prediction.predictions.occupied_seats,
+                標準偏差: 0,
+                最小: prediction.predictions.occupied_seats,
+                最大: prediction.predictions.occupied_seats,
+              },
+            };
+          }
+        );
+
+        setWeekdayAnalysis(transformedData);
+      } else {
+        setWeekdayAnalysis(null);
+      }
     } catch (error) {
       console.error("曜日別分析データ取得エラー:", error);
       setWeekdayAnalysis(null);
@@ -160,15 +222,10 @@ export default function AnalyticsPage() {
       return;
     }
 
-    const { todayAPIIndex, tomorrowAPIIndex } = getTodayTomorrowDayIndex();
+    const { today, tomorrow } = await fetchTodayTomorrowPredictions();
 
-    const [todayData, tomorrowData] = await Promise.all([
-      fetchDayPrediction(todayAPIIndex),
-      fetchDayPrediction(tomorrowAPIIndex),
-    ]);
-
-    setTodayPrediction(todayData);
-    setTomorrowPrediction(tomorrowData);
+    setTodayPrediction(today);
+    setTomorrowPrediction(tomorrow);
 
     await fetchWeekdayAnalysis();
     setLastUpdated(new Date());
