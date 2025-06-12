@@ -21,6 +21,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Supabaseリクエストは認証チェックから除外
+    const supabaseUrl =
+      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl && request.url.includes(supabaseUrl)) {
+      return NextResponse.next();
+    }
+
     // Authorization ヘッダーを取得
     const authorizationHeader = request.headers.get("authorization");
 
@@ -109,7 +116,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // Supabaseで認証を試行
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (supabaseUrl && supabaseServiceKey) {

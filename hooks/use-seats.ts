@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseAdmin } from "@/lib/supabase";
 
 interface Seat {
   id: number;
@@ -27,10 +27,10 @@ export function useSeats() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // 座席データと社内人口密度率を並列で取得
+        // 座席データと社内人口密度率を並列で取得（管理者権限で）
         const [seatsResponse, densityResponse] = await Promise.all([
-          supabase.from("seats").select("*").order("id"),
-          supabase
+          supabaseAdmin.from("seats").select("*").order("id"),
+          supabaseAdmin
             .from("settings")
             .select("value")
             .eq("key", "density")
@@ -46,8 +46,8 @@ export function useSeats() {
           // データがない場合は初期値をセット
           const initialSeats = createEmptySeats();
           setSeats(initialSeats);
-          // データベースに初期値を保存
-          await supabase.from("seats").upsert(initialSeats);
+          // データベースに初期値を保存（管理者権限で）
+          await supabaseAdmin.from("seats").upsert(initialSeats);
         }
 
         // 社内人口密度率の処理
@@ -62,7 +62,7 @@ export function useSeats() {
         } else {
           setDensityValue(densityResponse.data?.value || 0);
           if (!densityResponse.data) {
-            await supabase
+            await supabaseAdmin
               .from("settings")
               .upsert({ key: "density", value: 0 });
           }
@@ -136,7 +136,7 @@ export function useSeats() {
     };
   }, []);
 
-  // 座席の更新
+  // 座席の更新（管理者権限で実行）
   const updateSeat = async (seatId: number, updates: Partial<Seat>) => {
     try {
       setError(null);
@@ -157,7 +157,7 @@ export function useSeats() {
         updated_date: timeString,
       };
 
-      const { error } = await supabase.from("seats").upsert(updatedSeat);
+      const { error } = await supabaseAdmin.from("seats").upsert(updatedSeat);
       if (error) {
         const errorMessage = `座席の更新に失敗しました: ${error.message}`;
         console.error(errorMessage, error);
@@ -221,7 +221,7 @@ export function useSeats() {
 
   const updateDensity = async (value: number) => {
     const newValue = Math.max(0, Math.min(100, value));
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("settings")
       .upsert({ key: "density", value: newValue });
     if (error) {
