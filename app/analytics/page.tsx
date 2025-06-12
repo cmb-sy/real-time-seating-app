@@ -11,7 +11,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   LabelList,
 } from "recharts";
 
@@ -233,7 +232,7 @@ export default function AnalyticsPage() {
           {/* ── 左側: タイトルのみ */}
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold text-gray-900">
-              AI 予測分析ダッシュボード
+              統計分析ダッシュボード
             </h1>
             <p className="text-sm text-gray-500">ベータ版</p>
           </div>
