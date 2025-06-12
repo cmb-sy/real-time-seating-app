@@ -267,8 +267,11 @@ export default function AnalyticsPage() {
                 <div className="p-2 bg-gray-100 rounded-lg">
                   <Calendar className="h-6 w-6 text-black" />
                 </div>
-                {todayDate} ({todayPrediction?.weekday_name || "-"})の予測
+                本日の予測
               </CardTitle>
+              <p className="text-sm text-gray-400">
+                {todayDate} ({todayPrediction?.weekday_name || "-"})
+              </p>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-2 gap-6">
@@ -299,8 +302,11 @@ export default function AnalyticsPage() {
                 <div className="p-2 bg-gray-100 rounded-lg">
                   <TrendingUp className="h-6 w-6 text-black" />
                 </div>
-                {tomorrowDate} ({tomorrowPrediction?.weekday_name || "-"})の予測
+                明日の予測
               </CardTitle>
+              <p className="text-sm text-gray-400">
+                {tomorrowDate} ({tomorrowPrediction?.weekday_name || "-"})
+              </p>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-2 gap-6">
