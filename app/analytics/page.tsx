@@ -183,23 +183,41 @@ export default function AnalyticsPage() {
         // 日別予測データを変換
         Object.entries(data.data.daily_predictions).forEach(
           ([day, prediction]: [string, any]) => {
-            transformedData.data.detailed_stats[day] = {
-              レコード数: 1,
-              density_rate: {
-                平均: prediction.predictions.density_rate,
-                中央値: prediction.predictions.density_rate,
-                標準偏差: 0,
-                最小: prediction.predictions.density_rate,
-                最大: prediction.predictions.density_rate,
-              },
-              occupied_seats: {
-                平均: prediction.predictions.occupied_seats,
-                中央値: prediction.predictions.occupied_seats,
-                標準偏差: 0,
-                最小: prediction.predictions.occupied_seats,
-                最大: prediction.predictions.occupied_seats,
-              },
-            };
+            // predictionsがnullでない場合のみデータを追加
+            if (
+              prediction.predictions &&
+              prediction.predictions.density_rate !== undefined
+            ) {
+              transformedData.data.detailed_stats[day] = {
+                レコード数: prediction.レコード数 || 1,
+                density_rate: {
+                  平均: prediction.predictions.density_rate,
+                  中央値:
+                    prediction.density_rate?.中央値 ||
+                    prediction.predictions.density_rate,
+                  標準偏差: prediction.density_rate?.標準偏差 || 0,
+                  最小:
+                    prediction.density_rate?.最小 ||
+                    prediction.predictions.density_rate,
+                  最大:
+                    prediction.density_rate?.最大 ||
+                    prediction.predictions.density_rate,
+                },
+                occupied_seats: {
+                  平均: prediction.predictions.occupied_seats,
+                  中央値:
+                    prediction.occupied_seats?.中央値 ||
+                    prediction.predictions.occupied_seats,
+                  標準偏差: prediction.occupied_seats?.標準偏差 || 0,
+                  最小:
+                    prediction.occupied_seats?.最小 ||
+                    prediction.predictions.occupied_seats,
+                  最大:
+                    prediction.occupied_seats?.最大 ||
+                    prediction.predictions.occupied_seats,
+                },
+              };
+            }
           }
         );
 
@@ -337,7 +355,7 @@ export default function AnalyticsPage() {
                 <div className="text-center">
                   <div className="text-sm text-gray-500 mb-2">席占有率</div>
                   <div className="text-5xl font-bold text-black">
-                    {todayPrediction?.predictions.occupied_seats || "-"}
+                    {todayPrediction?.predictions?.occupied_seats || "-"}
                     <span className="text-xl text-gray-400">席</span>
                   </div>
                 </div>
@@ -346,7 +364,7 @@ export default function AnalyticsPage() {
                     社内人口密度率
                   </div>
                   <div className="text-5xl font-bold text-black">
-                    {todayPrediction?.predictions.density_rate.toFixed(1) ||
+                    {todayPrediction?.predictions?.density_rate?.toFixed(1) ||
                       "-"}
                     <span className="text-xl text-gray-400">%</span>
                   </div>
@@ -372,19 +390,26 @@ export default function AnalyticsPage() {
                 <div className="text-center">
                   <div className="text-sm text-gray-500 mb-2">席占有率</div>
                   <div className="text-5xl font-bold text-black">
-                    {tomorrowPrediction?.predictions.occupied_seats || "-"}
+                    {tomorrowPrediction?.predictions?.occupied_seats || "-"}
                     <span className="text-xl text-gray-400">席</span>
                   </div>
+                  {!tomorrowPrediction?.predictions && (
+                    <div className="text-xs text-gray-400 mt-1">データなし</div>
+                  )}
                 </div>
                 <div className="text-center">
                   <div className="text-sm text-gray-500 mb-2">
                     社内人口密度率
                   </div>
                   <div className="text-5xl font-bold text-black">
-                    {tomorrowPrediction?.predictions.density_rate.toFixed(1) ||
-                      "-"}
+                    {tomorrowPrediction?.predictions?.density_rate?.toFixed(
+                      1
+                    ) || "-"}
                     <span className="text-xl text-gray-400">%</span>
                   </div>
+                  {!tomorrowPrediction?.predictions && (
+                    <div className="text-xs text-gray-400 mt-1">データなし</div>
+                  )}
                 </div>
               </div>
             </CardContent>

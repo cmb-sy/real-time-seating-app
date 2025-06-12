@@ -68,9 +68,8 @@ export async function GET(request: NextRequest) {
 
     // 今日の予測
     if (todayWeekday <= 4) {
-      // データベースの曜日に変換（フロントエンド: 月曜=0 → データベース: 月曜=1）
-      const dbTodayWeekday = todayWeekday + 1;
-      const todayStats = weekdayStats[dbTodayWeekday];
+      // データベースの曜日定義と一致（月曜=0, 火曜=1, ..., 金曜=4）
+      const todayStats = weekdayStats[todayWeekday];
       if (todayStats && todayStats.density_rates.length > 0) {
         predictions.today = {
           day_of_week: todayWeekday,
@@ -101,9 +100,8 @@ export async function GET(request: NextRequest) {
 
     // 明日の予測
     if (tomorrowWeekday <= 4) {
-      // データベースの曜日に変換（フロントエンド: 月曜=0 → データベース: 月曜=1）
-      const dbTomorrowWeekday = tomorrowWeekday + 1;
-      const tomorrowStats = weekdayStats[dbTomorrowWeekday];
+      // データベースの曜日定義と一致（月曜=0, 火曜=1, ..., 金曜=4）
+      const tomorrowStats = weekdayStats[tomorrowWeekday];
       if (tomorrowStats && tomorrowStats.density_rates.length > 0) {
         predictions.tomorrow = {
           day_of_week: tomorrowWeekday,

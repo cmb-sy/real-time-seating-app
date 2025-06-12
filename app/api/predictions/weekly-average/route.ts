@@ -30,9 +30,8 @@ export async function GET(request: NextRequest) {
 
     // データを曜日別に分類（平日のみ）
     historyData?.forEach((record) => {
-      // 平日のみ（月曜=1, 火曜=2, 水曜=3, 木曜=4）
-      // 日曜=0, 土曜=6は除外、金曜=5のデータは現在存在しない
-      if (record.day_of_week >= 1 && record.day_of_week <= 4) {
+      // 平日のみ（月曜=0, 火曜=1, 水曜=2, 木曜=3, 金曜=4）
+      if (record.day_of_week >= 0 && record.day_of_week <= 4) {
         if (!weekdayStats[record.day_of_week]) {
           weekdayStats[record.day_of_week] = {
             density_rates: [],
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
       };
     };
 
-    const weekdayNames = ["", "月曜", "火曜", "水曜", "木曜", "金曜"];
+    const weekdayNames = ["月曜", "火曜", "水曜", "木曜", "金曜"];
 
     // 日別予測データを構築
     const weekdayPredictions: { [key: string]: any } = {};
@@ -82,7 +81,7 @@ export async function GET(request: NextRequest) {
     let totalOccupiedSum = 0;
     let validDaysCount = 0;
 
-    for (let dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek++) {
+    for (let dayOfWeek = 0; dayOfWeek <= 4; dayOfWeek++) {
       const dayName = weekdayNames[dayOfWeek];
       const stats = weekdayStats[dayOfWeek];
 
@@ -91,7 +90,7 @@ export async function GET(request: NextRequest) {
         const occupiedStats = calculateStats(stats.occupied_seats);
 
         weekdayPredictions[dayName] = {
-          day_of_week: dayOfWeek - 1, // 0ベースに変換（月曜=0）
+          day_of_week: dayOfWeek, // そのまま使用（月曜=0）
           weekday_name: dayName,
           predictions: {
             density_rate: densityStats.平均,
@@ -107,7 +106,7 @@ export async function GET(request: NextRequest) {
         validDaysCount++;
       } else {
         weekdayPredictions[dayName] = {
-          day_of_week: dayOfWeek - 1,
+          day_of_week: dayOfWeek,
           weekday_name: dayName,
           predictions: null,
           message: "この曜日の履歴データがありません",
