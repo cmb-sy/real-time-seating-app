@@ -1,22 +1,32 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Supabase設定
-const supabaseUrl = "https://howmdafbaqrbyzbcpazk.supabase.co";
+// 環境変数からSupabase設定を取得（フォールバックあり）
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://howmdafbaqrbyzbcpazk.supabase.co";
 const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvd21kYWZiYXFyYnl6YmNwYXprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3NDA5NDYsImV4cCI6MjA2NDMxNjk0Nn0.6IFpij4HaWv4TxXF1-rFcbAL1fqDnJJZ4p5sNbCrzWY";
-const supabaseServiceRoleKey =
-  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Supabaseクライアントの初期化 - 開発環境ではRLSをバイパス
-const supabase = createClient(
+// 管理者用Supabaseクライアント（サービスロールキー使用でRLSをバイパス）
+const supabaseAdmin = createClient(
   supabaseUrl,
   supabaseServiceRoleKey || supabaseAnonKey,
   {
     auth: {
-      autoRefreshToken: true,
-      persistSession: true,
+      autoRefreshToken: false,
+      persistSession: false,
     },
   }
 );
 
-export { supabase };
+// 一般ユーザー用Supabaseクライアント（匿名キー使用）
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+  },
+});
+
+export { supabase, supabaseAdmin };
