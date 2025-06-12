@@ -378,7 +378,7 @@ export default function AnalyticsPage() {
               統計分析ダッシュボード（ベータ版）
             </h1>
             <p className="text-sm text-gray-400">
-              決定木のアンサンブル学習を用いています。隔週でモデルを更新し予測結果を更新してます。
+              勾配ブースティングモデルで予測しAPI経由で提供しています。隔週でモデルを更新し予測結果を更新してます。
             </p>
           </div>
 
