@@ -183,33 +183,15 @@ export default function AnalyticsPage() {
           message: data.message,
         };
 
-        // 曜日名を統一する関数
-        const normalizeDayName = (dayName: string): string => {
-          const dayMap: { [key: string]: string } = {
-            月曜日: "月曜",
-            火曜日: "火曜",
-            水曜日: "水曜",
-            木曜日: "木曜",
-            金曜日: "金曜",
-            月曜: "月曜",
-            火曜: "火曜",
-            水曜: "水曜",
-            木曜: "木曜",
-            金曜: "金曜",
-          };
-          return dayMap[dayName] || dayName;
-        };
-
         // 日別予測データを変換
         Object.entries(data.data.daily_predictions || {}).forEach(
           ([day, prediction]: [string, any]) => {
-            const normalizedDay = normalizeDayName(day);
             // predictionsがnullでない場合のみデータを追加
             if (
               prediction.predictions &&
               prediction.predictions.density_rate !== undefined
             ) {
-              transformedData.data.detailed_stats[normalizedDay] = {
+              transformedData.data.detailed_stats[day] = {
                 レコード数: prediction.レコード数 || 1,
                 density_rate: {
                   平均: prediction.predictions.density_rate,
@@ -241,38 +223,6 @@ export default function AnalyticsPage() {
             }
           }
         );
-
-        // 新しいAPI形式の週間平均データが存在する場合
-        if (data.data.weekly_averages) {
-          // 週間平均データを変換（重複チェック付き）
-          data.data.weekly_averages.forEach((item: any) => {
-            const normalizedDay = normalizeDayName(item.weekday_name);
-
-            // まだ追加されていない曜日がある場合のみ追加
-            if (
-              !transformedData.data.detailed_stats[normalizedDay] &&
-              item.prediction
-            ) {
-              transformedData.data.detailed_stats[normalizedDay] = {
-                レコード数: item.prediction.data_points || 1,
-                density_rate: {
-                  平均: item.prediction.occupancy_rate * 100, // 0-1からパーセントに変換
-                  中央値: item.prediction.occupancy_rate * 100,
-                  標準偏差: 0,
-                  最小: item.prediction.occupancy_rate * 100,
-                  最大: item.prediction.occupancy_rate * 100,
-                },
-                occupied_seats: {
-                  平均: 100 - item.prediction.available_seats, // 利用可能席数から占有席数を計算
-                  中央値: 100 - item.prediction.available_seats,
-                  標準偏差: 0,
-                  最小: 100 - item.prediction.available_seats,
-                  最大: 100 - item.prediction.available_seats,
-                },
-              };
-            }
-          });
-        }
 
         setWeekdayAnalysis(transformedData);
       } else {
@@ -326,20 +276,17 @@ export default function AnalyticsPage() {
     ? Object.entries(weekdayAnalysis.data.detailed_stats)
         .map(([day, stat]) => {
           // 曜日名から数値への変換
-          const getDayOfWeek = (dayName: string): number => {
-            const dayMap: { [key: string]: number } = {
-              月曜: 0,
-              火曜: 1,
-              水曜: 2,
-              木曜: 3,
-              金曜: 4,
-            };
-            return dayMap[dayName] ?? 5; // 不明な場合は最後に
+          const dayMap: { [key: string]: number } = {
+            月曜: 0,
+            火曜: 1,
+            水曜: 2,
+            木曜: 3,
+            金曜: 4,
           };
 
           return {
             day,
-            dayOfWeek: getDayOfWeek(day),
+            dayOfWeek: dayMap[day] ?? 5,
             density_rate: stat.density_rate.平均,
             occupied_seats: stat.occupied_seats.平均,
           };
@@ -368,11 +315,8 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ナビゲーションバー */}
-      {/* ナビゲーションバー */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
-          {/* ── 左側: タイトルのみ */}
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold text-gray-900">
               統計分析ダッシュボード（ベータ版）
