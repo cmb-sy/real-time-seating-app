@@ -356,13 +356,13 @@ export default function AnalyticsPage() {
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="day" />
-                      <YAxis domain={[0, 8]} />
+                      <YAxis domain={[0, 8]} allowDecimals={false} />
                       <Bar dataKey="occupied_seats" barSize={40} fill="#8cbcff">
                         {/* 棒の上に数値ラベルを表示 */}
                         <LabelList
                           dataKey="occupied_seats"
                           position="top"
-                          formatter={(val: number) => `${val.toFixed(0)}`}
+                          formatter={(val: number) => `${val.toFixed(1)}`}
                         />
                       </Bar>
                     </BarChart>
@@ -396,8 +396,7 @@ export default function AnalyticsPage() {
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="day" />
-                      <YAxis unit="%" domain={[0, 100]} />
-                      {/* <YAxis unit="%" domain={[0, 100]} /> */}
+                      <YAxis unit="%" domain={[0, 100]} allowDecimals={false} />
                       <Bar dataKey="density_rate" barSize={40} fill="#b3f7c1">
                         {/* 棒の上に数値ラベルを表示 */}
                         <LabelList
