@@ -22,8 +22,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Supabaseリクエストは認証チェックから除外
-    const supabaseUrl =
-      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (supabaseUrl && request.url.includes(supabaseUrl)) {
       return NextResponse.next();
     }
