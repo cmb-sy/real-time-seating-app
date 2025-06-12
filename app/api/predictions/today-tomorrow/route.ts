@@ -65,24 +65,32 @@ export async function GET(request: NextRequest) {
 
     // 予測データの構築
     const predictions: any = {};
+    const formattedToday = today.toISOString().split("T")[0]; // YYYY-MM-DD形式
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const formattedTomorrow = tomorrow.toISOString().split("T")[0]; // YYYY-MM-DD形式
 
     // 今日の予測
     if (todayWeekday <= 4) {
       // データベースの曜日定義と一致（月曜=0, 火曜=1, ..., 金曜=4）
       const todayStats = weekdayStats[todayWeekday];
       if (todayStats && todayStats.density_rates.length > 0) {
+        const densityRate =
+          Math.round(calculateAverage(todayStats.density_rates) * 10) / 10;
+        const occupiedSeats =
+          Math.round(calculateAverage(todayStats.occupied_seats) * 10) / 10;
         predictions.today = {
+          date: formattedToday,
           day_of_week: todayWeekday,
           weekday_name: weekdayNames[todayWeekday],
           predictions: {
-            density_rate:
-              Math.round(calculateAverage(todayStats.density_rates) * 10) / 10,
-            occupied_seats:
-              Math.round(calculateAverage(todayStats.occupied_seats) * 10) / 10,
+            density_rate: densityRate,
+            occupied_seats: occupiedSeats,
           },
         };
       } else {
         predictions.today = {
+          date: formattedToday,
           day_of_week: todayWeekday,
           weekday_name: weekdayNames[todayWeekday],
           predictions: null,
@@ -91,6 +99,7 @@ export async function GET(request: NextRequest) {
       }
     } else {
       predictions.today = {
+        date: formattedToday,
         day_of_week: todayWeekday,
         weekday_name: weekdayNames[todayWeekday],
         predictions: null,
@@ -103,20 +112,22 @@ export async function GET(request: NextRequest) {
       // データベースの曜日定義と一致（月曜=0, 火曜=1, ..., 金曜=4）
       const tomorrowStats = weekdayStats[tomorrowWeekday];
       if (tomorrowStats && tomorrowStats.density_rates.length > 0) {
+        const densityRate =
+          Math.round(calculateAverage(tomorrowStats.density_rates) * 10) / 10;
+        const occupiedSeats =
+          Math.round(calculateAverage(tomorrowStats.occupied_seats) * 10) / 10;
         predictions.tomorrow = {
+          date: formattedTomorrow,
           day_of_week: tomorrowWeekday,
           weekday_name: weekdayNames[tomorrowWeekday],
           predictions: {
-            density_rate:
-              Math.round(calculateAverage(tomorrowStats.density_rates) * 10) /
-              10,
-            occupied_seats:
-              Math.round(calculateAverage(tomorrowStats.occupied_seats) * 10) /
-              10,
+            density_rate: densityRate,
+            occupied_seats: occupiedSeats,
           },
         };
       } else {
         predictions.tomorrow = {
+          date: formattedTomorrow,
           day_of_week: tomorrowWeekday,
           weekday_name: weekdayNames[tomorrowWeekday],
           predictions: null,
@@ -125,21 +136,20 @@ export async function GET(request: NextRequest) {
       }
     } else {
       predictions.tomorrow = {
-        day_of_week: tomorrowWeekday,
-        weekday_name: weekdayNames[tomorrowWeekday],
+        date: null,
+        day_of_week: null,
+        weekday_name: null,
         predictions: null,
-        message: "土日は予測データがありません",
+        message: "明日は土日のため営業していません",
       };
     }
 
     return NextResponse.json(
       {
         success: true,
+        timestamp: new Date().toISOString(),
         data: predictions,
-        message: `今日と明日の予測データを取得しました (履歴データ${
-          historyData?.length || 0
-        }件から算出)`,
-        data_count: historyData?.length || 0,
+        message: "機械学習モデルによる予測",
       },
       { status: 200, headers }
     );

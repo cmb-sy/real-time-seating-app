@@ -73,13 +73,18 @@ export async function GET(request: NextRequest) {
       };
     };
 
-    const weekdayNames = ["月曜", "火曜", "水曜", "木曜", "金曜"];
+    const weekdayNames = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日"];
 
-    // 日別予測データを構築
+    // 日別予測データと週間平均データを構築
     const weekdayPredictions: { [key: string]: any } = {};
+    const weeklyAverages = [];
     let totalDensitySum = 0;
     let totalOccupiedSum = 0;
     let validDaysCount = 0;
+    let maxOccupancyRate = 0;
+    let minOccupancyRate = 1;
+    let mostBusyDay = null;
+    let leastBusyDay = null;
 
     for (let dayOfWeek = 0; dayOfWeek <= 4; dayOfWeek++) {
       const dayName = weekdayNames[dayOfWeek];
@@ -88,21 +93,62 @@ export async function GET(request: NextRequest) {
       if (stats && stats.density_rates.length > 0) {
         const densityStats = calculateStats(stats.density_rates);
         const occupiedStats = calculateStats(stats.occupied_seats);
+        const densityRate = densityStats.平均;
+        const occupiedSeats = occupiedStats.平均;
+        const occupancyRate = densityRate / 100;
 
+        // 最も混雑している/空いている曜日を記録
+        if (occupancyRate > maxOccupancyRate) {
+          maxOccupancyRate = occupancyRate;
+          mostBusyDay = {
+            weekday: dayOfWeek,
+            weekday_name: dayName,
+            occupancy_rate: occupancyRate,
+          };
+        }
+
+        if (occupancyRate < minOccupancyRate) {
+          minOccupancyRate = occupancyRate;
+          leastBusyDay = {
+            weekday: dayOfWeek,
+            weekday_name: dayName,
+            occupancy_rate: occupancyRate,
+          };
+        }
+
+        // 従来のフォーマット（互換性のため）
         weekdayPredictions[dayName] = {
-          day_of_week: dayOfWeek, // そのまま使用（月曜=0）
+          day_of_week: dayOfWeek,
           weekday_name: dayName,
           predictions: {
-            density_rate: densityStats.平均,
-            occupied_seats: occupiedStats.平均,
+            density_rate: densityRate,
+            occupied_seats: occupiedSeats,
           },
           レコード数: stats.density_rates.length,
           density_rate: densityStats,
           occupied_seats: occupiedStats,
         };
 
-        totalDensitySum += densityStats.平均;
-        totalOccupiedSum += occupiedStats.平均;
+        // 新しいフォーマット（仕様書通り）
+        weeklyAverages.push({
+          weekday: dayOfWeek,
+          weekday_name: dayName,
+          prediction: {
+            occupancy_rate: Math.round(occupancyRate * 100) / 100,
+            available_seats: 100 - Math.ceil(occupiedSeats),
+            status:
+              occupancyRate < 0.3
+                ? "available"
+                : occupancyRate < 0.7
+                ? "moderate"
+                : "busy",
+            confidence: "medium",
+            data_points: stats.density_rates.length,
+          },
+        });
+
+        totalDensitySum += densityRate;
+        totalOccupiedSum += occupiedSeats;
         validDaysCount++;
       } else {
         weekdayPredictions[dayName] = {
@@ -115,29 +161,57 @@ export async function GET(request: NextRequest) {
     }
 
     // 週平均の計算
-    const weeklyAverage = {
-      average_density_rate:
-        validDaysCount > 0
-          ? Math.round((totalDensitySum / validDaysCount) * 10) / 10
-          : 0,
-      average_occupied_seats:
-        validDaysCount > 0
-          ? Math.round((totalOccupiedSum / validDaysCount) * 10) / 10
-          : 0,
-      total_weekdays: validDaysCount,
-      total_records: historyData?.length || 0,
-    };
+    const averageDensity =
+      validDaysCount > 0
+        ? Math.round((totalDensitySum / validDaysCount) * 10) / 10
+        : 0;
+    const averageOccupied =
+      validDaysCount > 0
+        ? Math.round((totalOccupiedSum / validDaysCount) * 10) / 10
+        : 0;
+    const averageOccupancy = averageDensity / 100;
+
+    // 週平均データと推奨メッセージ
+    let recommendation = "";
+    if (averageOccupancy < 0.3) {
+      recommendation =
+        "全体的に空いています。最も混雑するのは" +
+        (mostBusyDay?.weekday_name || "なし") +
+        "ですが、それでも比較的余裕があります。";
+    } else if (averageOccupancy < 0.7) {
+      recommendation =
+        "全体的に適度な混雑です。" +
+        (leastBusyDay?.weekday_name || "なし") +
+        "が最も空いています。";
+    } else {
+      recommendation =
+        "全体的に混雑しています。可能であれば" +
+        (leastBusyDay?.weekday_name || "なし") +
+        "の利用をお勧めします。";
+    }
 
     return NextResponse.json(
       {
         success: true,
+        timestamp: new Date().toISOString(),
         data: {
-          weekly_average: weeklyAverage,
+          weekly_averages: weeklyAverages,
+          summary: {
+            most_busy_day: mostBusyDay,
+            least_busy_day: leastBusyDay,
+            average_occupancy: Math.round(averageOccupancy * 100) / 100,
+            recommendation: recommendation,
+          },
+          // 互換性のため残す
           daily_predictions: weekdayPredictions,
         },
-        message: `週平均予測データを取得しました (履歴データ${
-          historyData?.length || 0
-        }件から算出)`,
+        metadata: {
+          model_version: "1.0.0",
+          last_updated: new Date().toISOString(),
+          features_used: ["day_of_week"],
+          data_source: "ml_model",
+        },
+        message: "機械学習モデルによる曜日別予測",
       },
       { status: 200, headers }
     );

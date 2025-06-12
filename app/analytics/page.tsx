@@ -19,11 +19,12 @@ interface PredictionResponse {
   success: boolean;
   day_of_week: number;
   weekday_name: string;
+  date?: string | null;
   predictions: {
     density_rate: number;
     occupied_seats: number;
   };
-  message: string;
+  message?: string;
 }
 
 interface WeekdayAnalysisItem {
@@ -133,6 +134,7 @@ export default function AnalyticsPage() {
               success: true,
               day_of_week: data.data.today.day_of_week,
               weekday_name: data.data.today.weekday_name,
+              date: data.data.today.date,
               predictions: data.data.today.predictions,
               message: data.message,
             }
@@ -143,6 +145,7 @@ export default function AnalyticsPage() {
               success: true,
               day_of_week: data.data.tomorrow.day_of_week,
               weekday_name: data.data.tomorrow.weekday_name,
+              date: data.data.tomorrow.date,
               predictions: data.data.tomorrow.predictions,
               message: data.message,
             }
@@ -181,7 +184,7 @@ export default function AnalyticsPage() {
         };
 
         // 日別予測データを変換
-        Object.entries(data.data.daily_predictions).forEach(
+        Object.entries(data.data.daily_predictions || {}).forEach(
           ([day, prediction]: [string, any]) => {
             // predictionsがnullでない場合のみデータを追加
             if (
@@ -220,6 +223,47 @@ export default function AnalyticsPage() {
             }
           }
         );
+
+        // 新しいAPI形式の週間平均データが存在する場合
+        if (data.data.weekly_averages) {
+          // 曜日名を変換するマップ
+          const dayNameMap: { [key: string]: string } = {
+            月曜日: "月曜",
+            火曜日: "火曜",
+            水曜日: "水曜",
+            木曜日: "木曜",
+            金曜日: "金曜",
+          };
+
+          // 週間平均データを変換
+          data.data.weekly_averages.forEach((item: any) => {
+            const dayName = dayNameMap[item.weekday_name] || item.weekday_name;
+
+            // まだ追加されていない曜日がある場合は追加
+            if (
+              !transformedData.data.detailed_stats[dayName] &&
+              item.prediction
+            ) {
+              transformedData.data.detailed_stats[dayName] = {
+                レコード数: item.prediction.data_points || 1,
+                density_rate: {
+                  平均: item.prediction.occupancy_rate * 100, // 0-1からパーセントに変換
+                  中央値: item.prediction.occupancy_rate * 100,
+                  標準偏差: 0,
+                  最小: item.prediction.occupancy_rate * 100,
+                  最大: item.prediction.occupancy_rate * 100,
+                },
+                occupied_seats: {
+                  平均: 100 - item.prediction.available_seats, // 利用可能席数から占有席数を計算
+                  中央値: 100 - item.prediction.available_seats,
+                  標準偏差: 0,
+                  最小: 100 - item.prediction.available_seats,
+                  最大: 100 - item.prediction.available_seats,
+                },
+              };
+            }
+          });
+        }
 
         setWeekdayAnalysis(transformedData);
       } else {

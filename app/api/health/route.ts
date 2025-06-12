@@ -12,21 +12,16 @@ export async function GET(request: NextRequest) {
   try {
     return NextResponse.json(
       {
-        status: "healthy",
-        database: "simulated",
-        models_loaded: false,
-        available_models: [],
-        environment: "production-lite",
-        message: "軽量化されたAPIが正常に動作しています",
-        timestamp: new Date().toISOString(),
+        status: "ok",
+        message: "API is running",
       },
       { status: 200, headers }
     );
   } catch (error) {
     return NextResponse.json(
       {
-        status: "unhealthy",
-        error: error instanceof Error ? error.message : "Unknown error",
+        status: "error",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 503, headers }
     );
