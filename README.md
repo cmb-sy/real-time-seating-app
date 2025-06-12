@@ -2,6 +2,9 @@
 
 A real-time seat information system that helps users check seat availability instantly. This application allows you to monitor and manage seating in shared spaces efficiently.
 
+<img width="709" alt="SS 2025-06-12 22 12 25" src="https://github.com/user-attachments/assets/7a978d82-661c-4ff6-a50d-b3cc0223a67d" />
+
+
 ## Features
 
 - Real-time seat availability monitoring
@@ -93,3 +96,6 @@ This application includes an automatic seat reset feature that runs daily at 21:
      - `RESET_API_KEY`: Same key as the one in your `.env.local` file
 
 The GitHub Actions workflow will automatically reset all seats daily at 21:00. You can also trigger the workflow manually from the Actions tab in your repository.
+
+## Backend
+https://github.com/cmb-sy/real-time-seating-app-ML
