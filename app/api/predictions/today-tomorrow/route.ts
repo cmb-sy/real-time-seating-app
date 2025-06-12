@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(request: NextRequest) {
   // CORS ヘッダーを設定
@@ -25,15 +26,41 @@ export async function GET(request: NextRequest) {
       "日曜",
     ];
 
-    // サンプルデータ（平日のみ）
-    const samplePredictions: {
-      [key: number]: { density_rate: number; occupied_seats: number };
-    } = {
-      0: { density_rate: 0.75, occupied_seats: 45 }, // 月曜
-      1: { density_rate: 0.65, occupied_seats: 39 }, // 火曜
-      2: { density_rate: 0.8, occupied_seats: 48 }, // 水曜
-      3: { density_rate: 0.7, occupied_seats: 42 }, // 木曜
-      4: { density_rate: 0.55, occupied_seats: 33 }, // 金曜
+    // density_historyテーブルから実際のデータを取得
+    const { data: historyData, error } = await supabaseAdmin
+      .from("density_history")
+      .select("day_of_week, occupied_seats, density_rate")
+      .order("created_at", { ascending: false })
+      .limit(200); // 最新200件を取得
+
+    if (error) {
+      console.error("履歴データの取得に失敗:", error);
+      throw new Error(`履歴データの取得に失敗: ${error.message}`);
+    }
+
+    // 曜日別の統計を計算
+    const weekdayStats: {
+      [key: number]: { density_rates: number[]; occupied_seats: number[] };
+    } = {};
+
+    // データを曜日別に分類
+    historyData?.forEach((record) => {
+      if (!weekdayStats[record.day_of_week]) {
+        weekdayStats[record.day_of_week] = {
+          density_rates: [],
+          occupied_seats: [],
+        };
+      }
+      weekdayStats[record.day_of_week].density_rates.push(record.density_rate);
+      weekdayStats[record.day_of_week].occupied_seats.push(
+        record.occupied_seats
+      );
+    });
+
+    // 平均値を計算する関数
+    const calculateAverage = (numbers: number[]): number => {
+      if (numbers.length === 0) return 0;
+      return numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
     };
 
     // 予測データの構築
@@ -41,15 +68,28 @@ export async function GET(request: NextRequest) {
 
     // 今日の予測
     if (todayWeekday <= 4) {
-      // 月-金
-      predictions.today = {
-        day_of_week: todayWeekday,
-        weekday_name: weekdayNames[todayWeekday],
-        predictions: samplePredictions[todayWeekday] || {
-          density_rate: 0.65,
-          occupied_seats: 39,
-        },
-      };
+      // データベースの曜日に変換（フロントエンド: 月曜=0 → データベース: 月曜=1）
+      const dbTodayWeekday = todayWeekday + 1;
+      const todayStats = weekdayStats[dbTodayWeekday];
+      if (todayStats && todayStats.density_rates.length > 0) {
+        predictions.today = {
+          day_of_week: todayWeekday,
+          weekday_name: weekdayNames[todayWeekday],
+          predictions: {
+            density_rate:
+              Math.round(calculateAverage(todayStats.density_rates) * 10) / 10,
+            occupied_seats:
+              Math.round(calculateAverage(todayStats.occupied_seats) * 10) / 10,
+          },
+        };
+      } else {
+        predictions.today = {
+          day_of_week: todayWeekday,
+          weekday_name: weekdayNames[todayWeekday],
+          predictions: null,
+          message: "この曜日の履歴データがありません",
+        };
+      }
     } else {
       predictions.today = {
         day_of_week: todayWeekday,
@@ -61,15 +101,30 @@ export async function GET(request: NextRequest) {
 
     // 明日の予測
     if (tomorrowWeekday <= 4) {
-      // 月-金
-      predictions.tomorrow = {
-        day_of_week: tomorrowWeekday,
-        weekday_name: weekdayNames[tomorrowWeekday],
-        predictions: samplePredictions[tomorrowWeekday] || {
-          density_rate: 0.65,
-          occupied_seats: 39,
-        },
-      };
+      // データベースの曜日に変換（フロントエンド: 月曜=0 → データベース: 月曜=1）
+      const dbTomorrowWeekday = tomorrowWeekday + 1;
+      const tomorrowStats = weekdayStats[dbTomorrowWeekday];
+      if (tomorrowStats && tomorrowStats.density_rates.length > 0) {
+        predictions.tomorrow = {
+          day_of_week: tomorrowWeekday,
+          weekday_name: weekdayNames[tomorrowWeekday],
+          predictions: {
+            density_rate:
+              Math.round(calculateAverage(tomorrowStats.density_rates) * 10) /
+              10,
+            occupied_seats:
+              Math.round(calculateAverage(tomorrowStats.occupied_seats) * 10) /
+              10,
+          },
+        };
+      } else {
+        predictions.tomorrow = {
+          day_of_week: tomorrowWeekday,
+          weekday_name: weekdayNames[tomorrowWeekday],
+          predictions: null,
+          message: "この曜日の履歴データがありません",
+        };
+      }
     } else {
       predictions.tomorrow = {
         day_of_week: tomorrowWeekday,
@@ -83,11 +138,15 @@ export async function GET(request: NextRequest) {
       {
         success: true,
         data: predictions,
-        message: "今日と明日の予測データを取得しました (サンプルデータ)",
+        message: `今日と明日の予測データを取得しました (履歴データ${
+          historyData?.length || 0
+        }件から算出)`,
+        data_count: historyData?.length || 0,
       },
       { status: 200, headers }
     );
   } catch (error) {
+    console.error("今日明日予測エラー:", error);
     return NextResponse.json(
       {
         success: false,
