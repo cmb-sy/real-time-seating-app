@@ -305,7 +305,7 @@ export default function AnalyticsPage() {
                 明日の予測
               </CardTitle>
               <p className="text-sm text-gray-400">
-                {tomorrowDate} ({tomorrowPrediction?.weekday_name || "-"})
+                {tomorrowDate} ({tomorrowPrediction?.weekday_name || "-"})の予測
               </p>
             </CardHeader>
             <CardContent className="p-6">
@@ -354,7 +354,7 @@ export default function AnalyticsPage() {
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="day" />
-                      <YAxis />
+                      <YAxis domain={[0, 8]} />
                       <Bar dataKey="occupied_seats" barSize={40} fill="#8cbcff">
                         {/* 棒の上に数値ラベルを表示 */}
                         <LabelList
@@ -394,7 +394,8 @@ export default function AnalyticsPage() {
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="day" />
-                      <YAxis unit="%" />
+                      <YAxis unit="%" domain={[0, 100]} />
+                      {/* <YAxis unit="%" domain={[0, 100]} /> */}
                       <Bar dataKey="density_rate" barSize={40} fill="#b3f7c1">
                         {/* 棒の上に数値ラベルを表示 */}
                         <LabelList
