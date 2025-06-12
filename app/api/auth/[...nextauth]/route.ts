@@ -63,6 +63,8 @@ const handler = NextAuth({
       return session;
     },
   },
+  // 本番環境での必須シークレット（JWT署名用）を追加
+  secret: process.env.NEXTAUTH_SECRET || "THIS_IS_AN_EXAMPLE_SECRET_REPLACE_ME",
 });
 
 export { handler as GET, handler as POST };
