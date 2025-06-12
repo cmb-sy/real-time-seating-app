@@ -14,16 +14,12 @@ const supabaseServiceRoleKey =
   process.env.SUPABASE_KEY ||
   supabaseAnonKey;
 
-// デバッグ用ログ（本番環境では削除すること）
-console.log("Supabase URL:", supabaseUrl);
-console.log("Service Role Key exists:", !!supabaseServiceRoleKey);
-console.log("Service Role Key length:", supabaseServiceRoleKey?.length || 0);
-
 // 管理者用Supabaseクライアント（サービスロールキー使用でRLSをバイパス）
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
+    storageKey: "supabase-admin-auth", // 管理者用の異なるストレージキー
   },
 });
 
@@ -32,6 +28,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
+    storageKey: "supabase-user-auth",
   },
 });
 

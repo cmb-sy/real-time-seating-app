@@ -260,6 +260,9 @@ export default function SeatManagement() {
         <DialogContent aria-describedby="seat-operation-description">
           <DialogHeader>
             <DialogTitle>座席の操作</DialogTitle>
+            <DialogDescription id="seat-operation-description">
+              座席の名前編集や退席などの操作ができます
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {editingSeat === confirmingSeat ? (
