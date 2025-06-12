@@ -273,6 +273,13 @@ export default function AnalyticsPage() {
             <CardContent className="p-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center">
+                  <div className="text-sm text-gray-500 mb-2">席占有率</div>
+                  <div className="text-5xl font-bold text-black">
+                    {todayPrediction?.predictions.occupied_seats || "-"}
+                    <span className="text-xl text-gray-400">席</span>
+                  </div>
+                </div>
+                <div className="text-center">
                   <div className="text-sm text-gray-500 mb-2">
                     社内人口密度率
                   </div>
@@ -280,13 +287,6 @@ export default function AnalyticsPage() {
                     {todayPrediction?.predictions.density_rate.toFixed(1) ||
                       "-"}
                     <span className="text-xl text-gray-400">%</span>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-500 mb-2">席占有率</div>
-                  <div className="text-5xl font-bold text-black">
-                    {todayPrediction?.predictions.occupied_seats || "-"}
-                    <span className="text-xl text-gray-400">席</span>
                   </div>
                 </div>
               </div>
@@ -305,6 +305,13 @@ export default function AnalyticsPage() {
             <CardContent className="p-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center">
+                  <div className="text-sm text-gray-500 mb-2">席占有率</div>
+                  <div className="text-5xl font-bold text-black">
+                    {tomorrowPrediction?.predictions.occupied_seats || "-"}
+                    <span className="text-xl text-gray-400">席</span>
+                  </div>
+                </div>
+                <div className="text-center">
                   <div className="text-sm text-gray-500 mb-2">
                     社内人口密度率
                   </div>
@@ -314,13 +321,6 @@ export default function AnalyticsPage() {
                     <span className="text-xl text-gray-400">%</span>
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-500 mb-2">席占有率</div>
-                  <div className="text-5xl font-bold text-black">
-                    {tomorrowPrediction?.predictions.occupied_seats || "-"}
-                    <span className="text-xl text-gray-400">席</span>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -328,47 +328,6 @@ export default function AnalyticsPage() {
 
         {/* 棒グラフ表示部分 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 密度率グラフ */}
-          <Card className="bg-white shadow-lg border border-gray-200">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-3 text-gray-900">
-                <div className="p-2 bg-emerald-100 rounded-lg">
-                  <Users className="h-6 w-6 text-emerald-600" />
-                </div>
-                社内人口密度率の曜日別平均値
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {chartData.length > 0 ? (
-                <div style={{ width: "100%", height: 400 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" />
-                      <YAxis unit="%" />
-                      <Bar dataKey="density_rate" barSize={40} fill="#10B981">
-                        {/* 棒の上に数値ラベルを表示 */}
-                        <LabelList
-                          dataKey="density_rate"
-                          position="top"
-                          formatter={(val: number) => `${val.toFixed(1)}`}
-                        />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="text-center py-16 text-gray-500">
-                  <Users className="h-12 w-12 mx-auto mb-3 animate-pulse" />
-                  <p className="text-lg">データを分析中...</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* 占有率グラフ */}
           <Card className="bg-white shadow-lg border border-gray-200">
             <CardHeader className="pb-4">
@@ -376,7 +335,7 @@ export default function AnalyticsPage() {
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Activity className="h-6 w-6 text-blue-600" />
                 </div>
-                席占有数の曜日別平均値
+                席占有数の平均値
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -390,7 +349,7 @@ export default function AnalyticsPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="day" />
                       <YAxis />
-                      <Bar dataKey="occupied_seats" barSize={40} fill="#064bb9">
+                      <Bar dataKey="occupied_seats" barSize={40} fill="#8cbcff">
                         {/* 棒の上に数値ラベルを表示 */}
                         <LabelList
                           dataKey="occupied_seats"
@@ -404,6 +363,46 @@ export default function AnalyticsPage() {
               ) : (
                 <div className="text-center py-16 text-gray-500">
                   <Activity className="h-12 w-12 mx-auto mb-3 animate-pulse" />
+                  <p className="text-lg">データを分析中...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          {/* 密度率グラフ */}
+          <Card className="bg-white shadow-lg border border-gray-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-gray-900">
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <Users className="h-6 w-6 text-emerald-600" />
+                </div>
+                社内人口密度率の平均値
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {chartData.length > 0 ? (
+                <div style={{ width: "100%", height: 400 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={chartData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis unit="%" />
+                      <Bar dataKey="density_rate" barSize={40} fill="#b3f7c1">
+                        {/* 棒の上に数値ラベルを表示 */}
+                        <LabelList
+                          dataKey="density_rate"
+                          position="top"
+                          formatter={(val: number) => `${val.toFixed(1)}`}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-center py-16 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-3 animate-pulse" />
                   <p className="text-lg">データを分析中...</p>
                 </div>
               )}
