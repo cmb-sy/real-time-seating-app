@@ -10,6 +10,8 @@ export const getApiConfig = () => {
     // エンドポイント設定
     localBackend: "http://localhost:8000",
     productionMLServer: "https://real-time-seating-app-ml.vercel.app",
+    // 同一ドメインAPIエンドポイント（CORSエラー回避）
+    sameOriginApi: "",
     // タイムアウト設定
     timeout: {
       development: 5000, // 開発環境: 5秒
@@ -54,7 +56,20 @@ export const checkApiAvailability = async () => {
 
   console.log("🔗 API接続の確認を開始...");
 
-  // 1. ローカルバックエンドをテスト
+  // 本番環境では同一ドメインのAPIエンドポイントを使用（CORSエラー回避）
+  if (config.isProduction) {
+    console.log("🌐 同一ドメインAPIエンドポイントを使用中...");
+
+    // 同一ドメインのAPIは常に利用可能として扱う
+    return {
+      isLocal: false,
+      isProduction: true,
+      activeEndpoint: "same-origin",
+      baseUrl: config.sameOriginApi,
+    };
+  }
+
+  // 開発環境ではローカルバックエンドを優先的にテスト
   console.log("📡 ローカルバックエンド (localhost:8000) をテスト中...");
   const isLocalAvailable = await testApiConnection(config.localBackend, 3000);
 
@@ -68,30 +83,13 @@ export const checkApiAvailability = async () => {
     };
   }
 
-  // 2. 本番MLサーバーをテスト
-  console.log("🌐 本番MLサーバーをテスト中...");
-  const isProductionAvailable = await testApiConnection(
-    config.productionMLServer,
-    5000
-  );
-
-  if (isProductionAvailable) {
-    console.log("✅ 本番MLサーバーが利用可能です");
-    return {
-      isLocal: false,
-      isProduction: true,
-      activeEndpoint: "production",
-      baseUrl: config.productionMLServer,
-    };
-  }
-
-  // 3. どちらも利用できない場合
-  console.log("❌ どちらのAPIサーバーも利用できません");
+  // ローカルが利用できない場合は同一ドメインAPIにフォールバック
+  console.log("🌐 同一ドメインAPIエンドポイントにフォールバック...");
   return {
     isLocal: false,
-    isProduction: false,
-    activeEndpoint: "unavailable",
-    baseUrl: null,
+    isProduction: true,
+    activeEndpoint: "same-origin",
+    baseUrl: config.sameOriginApi,
   };
 };
 
