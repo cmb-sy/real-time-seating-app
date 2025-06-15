@@ -13,6 +13,7 @@ BEGIN
             id SERIAL PRIMARY KEY,
             day_of_week INTEGER NOT NULL, -- 0: 日曜日, 1: 月曜日, ..., 6: 土曜日
             occupied_seats INTEGER NOT NULL,
+            total_seats INTEGER NOT NULL DEFAULT 8,
             density_rate DECIMAL(5,2) NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT valid_day_of_week CHECK (day_of_week >= 0 AND day_of_week <= 6),
@@ -30,16 +31,36 @@ BEGIN
             ON public.density_history
             FOR SELECT USING (true);
         
-        -- 認証されたユーザーがデータを追加できるポリシーを作成
-        CREATE POLICY "Allow authenticated users to insert density_history"
+        -- サービスロールとPUBLICユーザーがデータを追加できるポリシーを作成
+        CREATE POLICY "Allow service role and public to insert density_history"
             ON public.density_history
             FOR INSERT
-            TO authenticated
+            TO PUBLIC
             WITH CHECK (true);
         
         RAISE NOTICE 'density_history テーブルが作成されました';
     ELSE
         RAISE NOTICE 'density_history テーブルは既に存在します';
+        
+        -- 既存テーブルのカラムを確認し、total_seatsが存在しない場合は追加
+        IF NOT EXISTS (
+            SELECT FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'density_history'
+            AND column_name = 'total_seats'
+        ) THEN
+            ALTER TABLE public.density_history
+            ADD COLUMN total_seats INTEGER NOT NULL DEFAULT 8;
+            RAISE NOTICE 'total_seats カラムが追加されました';
+        END IF;
+        
+        -- RLSポリシーを更新（既存のポリシーを削除して新しいものを作成）
+        DROP POLICY IF EXISTS "Allow authenticated users to insert density_history" ON public.density_history;
+        CREATE POLICY "Allow service role and public to insert density_history"
+            ON public.density_history
+            FOR INSERT
+            TO PUBLIC
+            WITH CHECK (true);
     END IF;
     
     -- トリガー関数が存在しない場合は作成
