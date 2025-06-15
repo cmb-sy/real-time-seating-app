@@ -48,7 +48,8 @@ jobs:
 
           # 密度計算
           OCCUPIED_COUNT=$(echo "$RESPONSE_BODY" | jq '[.[] | select(.is_occupied == true)] | length')
-          TOTAL_SEATS=$(echo "$RESPONSE_BODY" | jq 'length')
+          # 総座席数は8席固定
+          TOTAL_SEATS=8
           DENSITY_RATE=$(echo "scale=2; $OCCUPIED_COUNT * 100 / $TOTAL_SEATS" | bc)
 
           echo "占有座席数: $OCCUPIED_COUNT / $TOTAL_SEATS"
@@ -88,7 +89,6 @@ jobs:
               \"day_of_week\": $DAY_OF_WEEK,
               \"density_rate\": $DENSITY_RATE,
               \"occupied_seats\": $OCCUPIED_COUNT,
-              \"total_seats\": $TOTAL_SEATS,
               \"created_at\": \"$TIMESTAMP\"
             }")
 
