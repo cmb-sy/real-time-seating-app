@@ -197,11 +197,14 @@ export default function AnalyticsPage() {
       console.log(`📊 週間平均のAPIレスポンス:`, data);
 
       if (data.success && data.data) {
+        // MLサーバーからの実データを使用（平日のみの場合が多い）
         const sortedAverages = data.data.weekly_averages.sort(
           (a, b) => a.weekday - b.weekday
         );
         setWeeklyAverages(sortedAverages);
-        console.log(`✅ 週間平均データを取得しました`);
+        console.log(
+          `✅ 週間平均データを取得しました（${sortedAverages.length}日分）`
+        );
       } else {
         console.error("週間平均データの取得失敗:", data.error);
         setWeeklyAverages([]);

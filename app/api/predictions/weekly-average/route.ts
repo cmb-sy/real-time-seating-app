@@ -30,8 +30,11 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
 
+    // MLサーバーのレスポンスをフロントエンド形式に変換
+    const transformedData = transformWeeklyAverageResponse(data);
+
     // CORSヘッダーを追加してレスポンス
-    return NextResponse.json(data, {
+    return NextResponse.json(transformedData, {
       status: 200,
       headers: setCorsHeaders(),
     });
@@ -60,3 +63,18 @@ export async function OPTIONS() {
     headers: setCorsHeaders(),
   });
 }
+
+// MLサーバーのレスポンスをフロントエンド形式に変換
+const transformWeeklyAverageResponse = (data: any) => {
+  return {
+    success: true,
+    data: {
+      weekly_averages: data.data.weekly_averages.map((item: any) => ({
+        weekday: item.weekday,
+        weekday_name: item.weekday_name,
+        occupancy_rate: item.occupancy_rate,
+        occupied_seats: item.occupied_seats,
+      })),
+    },
+  };
+};
