@@ -14,6 +14,96 @@ A real-time seat information system that helps users check seat availability ins
 - Density indicator for space utilization
 - Basic authentication for access control
 - Contact form using SSGform service
+- **Smart API Endpoint Detection**: Automatic fallback between local and production APIs
+
+## API Endpoint Management
+
+This application includes intelligent API endpoint detection that automatically switches between local development and production environments:
+
+### How It Works
+
+1. **Local Development Priority**: When running the analytics page, the app first tries to connect to the local backend server at `http://localhost:8000`
+2. **Automatic Fallback**: If the local server is not available, it automatically falls back to the production API endpoints
+3. **Visual Status Indicator**: The header shows the current connection status:
+   - 🟢 **ローカル接続** (Local Connection): Connected to local development server
+   - 🔵 **本番接続** (Production Connection): Connected to production server
+   - 🔴 **接続失敗** (Connection Failed): No servers available
+4. **Manual Toggle**: Users can manually switch between local and production endpoints using the toggle button
+
+### Backend Server Setup
+
+#### Local Development
+
+To run the local backend server:
+
+```bash
+# Navigate to your backend directory
+cd path/to/your/backend
+
+# Start the FastAPI server on port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The frontend will automatically detect and connect to `http://localhost:8000/api/predictions/*` endpoints.
+
+#### Production
+
+The production API endpoints are served from the same domain as the frontend:
+
+- `/api/predictions/today-tomorrow`
+- `/api/predictions/weekly-average`
+
+### API Endpoints
+
+The application expects the following API endpoints:
+
+1. **Today/Tomorrow Predictions**: `GET /api/predictions/today-tomorrow`
+
+   ```json
+   {
+     "success": true,
+     "data": {
+       "today": {
+         "date": "2024-01-15",
+         "day_of_week": "月",
+         "occupancy_rate": 0.65,
+         "available_seats": 35
+       },
+       "tomorrow": {
+         "date": "2024-01-16",
+         "day_of_week": "火",
+         "occupancy_rate": 0.75,
+         "available_seats": 25
+       }
+     }
+   }
+   ```
+
+2. **Weekly Averages**: `GET /api/predictions/weekly-average`
+   ```json
+   {
+     "success": true,
+     "data": {
+       "weekly_averages": [
+         {
+           "weekday": 0,
+           "weekday_name": "月曜",
+           "occupancy_rate": 0.65,
+           "available_seats": 35
+         }
+       ]
+     }
+   }
+   ```
+
+### Troubleshooting
+
+If you see **接続失敗** (Connection Failed):
+
+1. **Check Local Server**: Ensure your local backend is running on port 8000
+2. **Check Network**: Verify network connectivity
+3. **Check Console**: Open browser dev tools to see detailed error messages
+4. **Manual Retry**: Use the "再接続を試行" (Retry Connection) button
 
 ## Requirements
 

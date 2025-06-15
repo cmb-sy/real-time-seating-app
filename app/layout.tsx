@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "./providers/AuthProvider";
-import { NavMenu } from "@/components/nav-menu";
+import { HeaderNav } from "@/components/ui/header-nav";
 
 export const metadata: Metadata = {
   title: "リアルタイム座席管理アプリ",
@@ -22,10 +22,8 @@ export default function RootLayout({
       <body className="bg-white">
         <AuthProvider>
           <div className="relative min-h-screen">
-            <div className="absolute top-4 right-4 z-10">
-              <NavMenu />
-            </div>
-            {children}
+            <HeaderNav />
+            <main className="pt-16">{children}</main>
           </div>
         </AuthProvider>
       </body>
