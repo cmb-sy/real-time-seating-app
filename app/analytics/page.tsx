@@ -58,7 +58,7 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isLocalApi, setIsLocalApi] = useState<boolean>(false);
-  const [currentBaseUrl, setCurrentBaseUrl] = useState<string>("");
+  const [currentBaseUrl, setCurrentBaseUrl] = useState<string | null>(null);
 
   // 今日と明日の日付情報を取得する関数
   const getTodayTomorrowInfo = () => {
@@ -93,7 +93,7 @@ export default function AnalyticsPage() {
       const availability = await checkApiAvailability();
 
       setIsLocalApi(availability.isLocal);
-      setCurrentBaseUrl(availability.baseUrl || "");
+      setCurrentBaseUrl(availability.baseUrl);
 
       if (availability.activeEndpoint === "local") {
         setApiStatus("ローカル接続");
@@ -102,6 +102,10 @@ export default function AnalyticsPage() {
       } else if (availability.activeEndpoint === "production") {
         setApiStatus("本番ML接続");
         console.log("✅ 本番MLサーバーに接続しました");
+        setIsConnected(true);
+      } else if (availability.activeEndpoint === "same-origin") {
+        setApiStatus("本番接続");
+        console.log("✅ 同一ドメインAPIに接続しました");
         setIsConnected(true);
       } else {
         setApiStatus("接続失敗");
@@ -140,9 +144,12 @@ export default function AnalyticsPage() {
   };
 
   // 今日・明日の予測データを取得
-  const fetchTodayTomorrowPredictions = async (baseUrl: string) => {
+  const fetchTodayTomorrowPredictions = async (baseUrl: string | null) => {
     try {
-      const url = `${baseUrl}/api/predictions/today-tomorrow`;
+      // baseUrlが空文字またはnullの場合は相対パスを使用
+      const url = baseUrl
+        ? `${baseUrl}/api/predictions/today-tomorrow`
+        : "/api/predictions/today-tomorrow";
       console.log(`📅 今日・明日の予測データを取得中: ${url}`);
 
       const response = await safeFetch(url, 15000);
@@ -172,9 +179,12 @@ export default function AnalyticsPage() {
   };
 
   // 週間平均データを取得
-  const fetchWeeklyAverages = async (baseUrl: string) => {
+  const fetchWeeklyAverages = async (baseUrl: string | null) => {
     try {
-      const url = `${baseUrl}/api/predictions/weekly-average`;
+      // baseUrlが空文字またはnullの場合は相対パスを使用
+      const url = baseUrl
+        ? `${baseUrl}/api/predictions/weekly-average`
+        : "/api/predictions/weekly-average";
       console.log(`📊 週間平均データを取得中: ${url}`);
 
       const response = await safeFetch(url, 15000);
@@ -210,14 +220,14 @@ export default function AnalyticsPage() {
     try {
       const baseUrl = await initializeApiConnection();
 
-      if (!baseUrl) {
+      if (baseUrl === null) {
         throw new Error("利用可能なAPIサーバーがありません");
       }
 
       // 並列でデータを取得
       await Promise.all([
-        fetchTodayTomorrowPredictions(baseUrl),
-        fetchWeeklyAverages(baseUrl),
+        fetchTodayTomorrowPredictions(baseUrl!),
+        fetchWeeklyAverages(baseUrl!),
       ]);
 
       setLastUpdated(new Date());
@@ -232,7 +242,7 @@ export default function AnalyticsPage() {
 
   // 手動でデータを再取得する関数（エンドポイント切り替えは削除）
   const refreshData = async () => {
-    if (!currentBaseUrl) {
+    if (currentBaseUrl === null) {
       console.error("ベースURLが設定されていません");
       return;
     }
@@ -241,10 +251,14 @@ export default function AnalyticsPage() {
 
     try {
       await Promise.all([
-        fetchTodayTomorrowPredictions(currentBaseUrl),
-        fetchWeeklyAverages(currentBaseUrl),
+        fetchTodayTomorrowPredictions(currentBaseUrl!),
+        fetchWeeklyAverages(currentBaseUrl!),
       ]);
-      setApiStatus(isLocalApi ? "ローカル接続" : "本番ML接続");
+      if (isLocalApi) {
+        setApiStatus("ローカル接続");
+      } else {
+        setApiStatus("本番接続");
+      }
       setIsConnected(true);
       setLastUpdated(new Date());
     } catch (error) {
