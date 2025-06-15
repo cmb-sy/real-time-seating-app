@@ -57,7 +57,7 @@ const SeatButton = memo(
     // 編集モード
     if (!seat.is_occupied && isEditing) {
       return (
-        <div className="relative h-44 w-full">
+        <div className="relative h-32 sm:h-40 lg:h-44 w-full">
           <div className="h-full w-full bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 rounded-2xl shadow-lg flex flex-col items-center justify-center p-4 relative overflow-hidden">
             {/* 背景装飾 */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-2xl" />
@@ -66,11 +66,11 @@ const SeatButton = memo(
             </div>
 
             {/* 座席番号 */}
-            <div className="flex items-center gap-2 mb-3 z-10">
-              <span className="text-lg font-bold text-gray-700">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3 z-10">
+              <span className="text-sm sm:text-base lg:text-lg font-bold text-gray-700">
                 席{seat.id}
               </span>
-              <UserX className="h-5 w-5 text-gray-500" />
+              <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
             </div>
 
             {/* 入力フィールド */}
@@ -81,7 +81,7 @@ const SeatButton = memo(
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
                 placeholder="お名前を入力"
-                className="text-center text-xl font-medium border-0 bg-white/80 backdrop-blur-sm rounded-xl shadow-inner focus:ring-2 focus:ring-blue-400 focus:bg-white transition-all duration-200 h-12"
+                className="text-center text-sm sm:text-lg lg:text-xl font-medium border-0 bg-white/80 backdrop-blur-sm rounded-xl shadow-inner focus:ring-2 focus:ring-blue-400 focus:bg-white transition-all duration-200 h-8 sm:h-10 lg:h-12"
                 autoFocus
               />
             </div>
@@ -95,9 +95,9 @@ const SeatButton = memo(
       );
     }
 
-    // 通常の座席表示 - 完全に固定化
+    // 通常の座席表示 - レスポンシブ対応
     return (
-      <div className="relative h-44 w-full">
+      <div className="relative h-32 sm:h-40 lg:h-44 w-full">
         <Button
           id={`seat-${seat.id}`}
           onClick={handleClick}
@@ -122,13 +122,15 @@ const SeatButton = memo(
           {/* 座席内容 - レイヤー分けした固定レイアウト */}
           <div className="relative z-10 h-full w-full">
             {/* 座席番号とアイコン - 上部固定 */}
-            <div className="absolute top-3 left-0 right-0 flex items-center justify-center">
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold">席{seat.id}</span>
+            <div className="absolute top-2 sm:top-3 left-0 right-0 flex items-center justify-center">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-xs sm:text-sm lg:text-base font-bold">
+                  席{seat.id}
+                </span>
                 {seat.is_occupied ? (
-                  <User className="h-4 w-4" />
+                  <User className="h-3 w-3 sm:h-4 sm:w-4" />
                 ) : (
-                  <UserX className="h-4 w-4" />
+                  <UserX className="h-3 w-3 sm:h-4 sm:w-4" />
                 )}
               </div>
             </div>
@@ -142,9 +144,9 @@ const SeatButton = memo(
                 {seat.is_occupied && seat.name ? (
                   <div className="text-center w-full">
                     <div
-                      className="text-xl font-bold leading-tight break-words text-center"
+                      className="text-sm sm:text-lg lg:text-xl font-bold leading-tight break-words text-center"
                       style={{
-                        maxHeight: "3.5rem",
+                        maxHeight: "2.5rem",
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
@@ -161,10 +163,10 @@ const SeatButton = memo(
             </div>
 
             {/* 更新時間 - 下部固定 */}
-            <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center">
+            <div className="absolute bottom-2 sm:bottom-3 left-0 right-0 flex items-center justify-center">
               {seat.is_occupied && seat.updated_date && (
-                <div className="flex items-center gap-1 text-sm">
-                  <Clock className="h-4 w-4" />
+                <div className="flex items-center gap-1 text-xs sm:text-sm">
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>{seat.updated_date.substring(0, 5)}</span>
                 </div>
               )}
@@ -214,11 +216,11 @@ export const SeatGrid = memo(
     });
 
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center">
+      <div className="w-full flex flex-col items-center justify-center">
         {/* 座席グリッドコンテナ */}
-        <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-3xl shadow-xl border border-gray-200 max-w-6xl w-full p-8">
-          {/* 座席グリッド - 完全に固定レイアウト、画面サイズに最適化 */}
-          <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-3xl shadow-xl border border-gray-200 w-full p-4 sm:p-6 lg:p-8 mx-auto">
+          {/* 座席グリッド - レスポンシブレイアウト */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
             {fixedSeats.map((seat, index) => (
               <div
                 key={`seat-${seat.id}`} // シンプルで一意なキー

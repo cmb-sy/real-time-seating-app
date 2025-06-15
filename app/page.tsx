@@ -4,7 +4,7 @@ import SeatManagement from "../seat-management";
 
 export default function Page() {
   return (
-    <div className="seat-display-page">
+    <div className="scrollable-page min-h-screen">
       <SeatManagement />
     </div>
   );

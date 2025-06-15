@@ -3,7 +3,7 @@ import "./globals.css";
 import { HeaderNav } from "@/components/ui/header-nav";
 
 export const metadata: Metadata = {
-  title: "リアルタイム座席管理アプリ",
+  title: "座席ミエールアプリ",
   description: "座席の予約とリアルタイム管理のためのアプリケーション",
   generator: "v0.dev",
   icons: {

@@ -99,7 +99,7 @@ export default function ThankYouPage() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8"
             >
-              リアルタイム座席管理システムをご利用いただき、
+              座席ミエールシステムをご利用いただき、
               <br />
               心より感謝申し上げます 🎉
             </motion.p>

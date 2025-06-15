@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { DensitySelector } from "@/components/ui/density-selector";
 
 // 座席管理アプリのメニュー項目
 const MENU_ITEMS = [
@@ -92,16 +93,21 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
             {/* 左側: ブランドロゴ */}
             <div className="flex items-center space-x-3">
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-slate-800">
-                  リアルタイム座席管理
-                </h1>
-                <div className="flex items-center text-xs text-slate-500 mt-0.5">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  {new Date().toLocaleDateString("ja-JP", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </div>
+                <Link
+                  href="/"
+                  className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                >
+                  <h1 className="text-lg font-bold text-slate-800">
+                    座席ミエール
+                  </h1>
+                  <div className="flex items-center text-xs text-slate-500 mt-0.5">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {new Date().toLocaleDateString("ja-JP", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
+                </Link>
               </div>
             </div>
 
@@ -127,6 +133,11 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
 
             {/* 右側: ユーティリティ */}
             <div className="flex items-center space-x-3">
+              {/* 人口密度率セレクター */}
+              <div className="hidden sm:block">
+                <DensitySelector />
+              </div>
+
               {/* API接続ステータス */}
               <div className="hidden lg:block">{renderApiStatus()}</div>
 
@@ -176,15 +187,23 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
                       ))}
                     </nav>
 
-                    {/* モバイル用API接続ステータス */}
+                    {/* モバイル用人口密度率セレクター */}
                     <div className="mt-6 p-4 bg-white rounded-xl border border-slate-200">
+                      <div className="text-sm font-medium text-slate-700 mb-3">
+                        人口密度率設定
+                      </div>
+                      <DensitySelector />
+                    </div>
+
+                    {/* モバイル用API接続ステータス */}
+                    <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200">
                       {renderApiStatus()}
                     </div>
 
                     {/* フッター */}
                     <div className="absolute bottom-6 left-6 right-6">
                       <div className="text-xs text-slate-400 text-center">
-                        © 2025 リアルタイム座席管理 v3.0
+                        © 2025 座席ミエール v3.0
                       </div>
                     </div>
                   </SheetContent>

@@ -75,7 +75,14 @@ export default function AnalyticsPage() {
       day: "numeric",
     });
 
-    return { todayDate, tomorrowDate };
+    const todayDayOfWeek = today.toLocaleDateString("ja-JP", {
+      weekday: "long",
+    });
+    const tomorrowDayOfWeek = tomorrow.toLocaleDateString("ja-JP", {
+      weekday: "long",
+    });
+
+    return { todayDate, tomorrowDate, todayDayOfWeek, tomorrowDayOfWeek };
   };
 
   // API接続確認とエンドポイント決定
@@ -306,7 +313,8 @@ export default function AnalyticsPage() {
     );
   }
 
-  const { todayDate, tomorrowDate } = getTodayTomorrowInfo();
+  const { todayDate, tomorrowDate, todayDayOfWeek, tomorrowDayOfWeek } =
+    getTodayTomorrowInfo();
 
   return (
     <>
@@ -352,7 +360,7 @@ export default function AnalyticsPage() {
                   本日の予測
                 </CardTitle>
                 <p className="text-sm text-gray-400">
-                  {todayDate} ({todayPrediction?.day_of_week || "-"})
+                  {todayDate} ({todayPrediction?.day_of_week || todayDayOfWeek})
                 </p>
               </CardHeader>
               <CardContent className="p-6">
@@ -388,7 +396,8 @@ export default function AnalyticsPage() {
                   明日の予測
                 </CardTitle>
                 <p className="text-sm text-gray-400">
-                  {tomorrowDate} ({tomorrowPrediction?.day_of_week || "-"})
+                  {tomorrowDate} (
+                  {tomorrowPrediction?.day_of_week || tomorrowDayOfWeek})
                 </p>
               </CardHeader>
               <CardContent className="p-6">
