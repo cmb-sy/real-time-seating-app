@@ -1,0 +1,68 @@
+name: Record Density Scheduler
+
+on:
+  schedule:
+    # 毎時間実行（密度データを記録）
+    - cron: "0 * * * *"
+  # 手動実行用のトリガー
+  workflow_dispatch:
+
+jobs:
+  record-density:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install jq and bc
+        run: sudo apt-get update && sudo apt-get install -y jq bc
+
+      - name: Record density data
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # シークレットの存在確認
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "エラー: Supabase認証情報が設定されていません"
+            exit 1
+          fi
+
+          echo "📊 現在の密度データを記録中..."
+
+          # 現在の座席状況を取得
+          SEATS_RESPONSE=$(curl -s -X GET \
+            "${SUPABASE_URL}/rest/v1/seats?select=*" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}")
+
+          echo "座席データ: $SEATS_RESPONSE"
+
+          # 占有されている座席数を計算
+          OCCUPIED_COUNT=$(echo "$SEATS_RESPONSE" | jq '[.[] | select(.is_occupied == true)] | length')
+          TOTAL_SEATS=8
+          DENSITY_RATE=$(echo "scale=2; $OCCUPIED_COUNT * 100 / $TOTAL_SEATS" | bc)
+
+          echo "占有座席数: $OCCUPIED_COUNT / $TOTAL_SEATS"
+          echo "密度率: $DENSITY_RATE%"
+
+          # 現在の密度率を設定テーブルに保存
+          curl -s -X PATCH \
+            "${SUPABASE_URL}/rest/v1/settings?key=eq.density" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{\"value\": $DENSITY_RATE}"
+
+          # 密度履歴テーブルに記録（存在する場合）
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          curl -s -X POST \
+            "${SUPABASE_URL}/rest/v1/density_history" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"density_rate\": $DENSITY_RATE,
+              \"occupied_seats\": $OCCUPIED_COUNT,  
+              \"total_seats\": $TOTAL_SEATS,
+              \"recorded_at\": \"$TIMESTAMP\"
+            }" || echo "密度履歴テーブルが存在しない可能性があります"
+
+          echo "✅ 密度データの記録が完了しました（密度率: ${DENSITY_RATE}%）"
