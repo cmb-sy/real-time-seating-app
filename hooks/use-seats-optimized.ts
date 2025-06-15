@@ -10,24 +10,36 @@ interface Seat {
 
 export function useSeatsOptimized() {
   // 座席を固定配列として初期化（1-8の順序を絶対に保持）
+  // ハイドレーションエラーを防ぐため、初期化時は時刻を空文字に
   const [seats, setSeats] = useState<Seat[]>(() =>
     Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,
       name: null,
       is_occupied: false,
-      updated_date: new Date().toTimeString().substring(0, 5),
+      updated_date: "", // 初期化時は空文字
     }))
   );
 
   const [densityValue, setDensityValue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   // 更新中の座席IDを追跡（重複更新防止）
   const updatingSeats = useRef<Set<number>>(new Set());
 
   // 最後の更新時刻を追跡（デバウンス用）
   const lastUpdateTime = useRef<{ [key: number]: number }>({});
+
+  // クライアントサイドマウント確認
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // 現在時刻を取得する関数（クライアントサイドでのみ実行）
+  const getCurrentTimeString = useCallback(() => {
+    return isMounted ? new Date().toTimeString().substring(0, 5) : "";
+  }, [isMounted]);
 
   // 空席の初期データを生成
   const createEmptySeats = useCallback(
@@ -36,16 +48,15 @@ export function useSeatsOptimized() {
         id: i + 1,
         name: null,
         is_occupied: false,
-        updated_date: new Date().toTimeString().substring(0, 5),
+        updated_date: getCurrentTimeString(),
       })),
-    []
+    [getCurrentTimeString]
   );
 
   // 座席の即座更新（楽観的更新）- 順序を絶対に変更しない
   const updateSeatOptimistic = useCallback(
     (seatId: number, updates: Partial<Seat>) => {
-      const now = new Date();
-      const timeString = now.toTimeString().substring(0, 5);
+      const timeString = getCurrentTimeString();
 
       setSeats((prevSeats) => {
         // 固定配列を作成し、該当する座席のみ更新
@@ -63,7 +74,7 @@ export function useSeatsOptimized() {
         return newSeats; // ソートしない！順序を絶対に保持
       });
     },
-    []
+    [getCurrentTimeString]
   );
 
   // 座席の更新（高速化版）
@@ -103,7 +114,7 @@ export function useSeatsOptimized() {
           throw new Error(`座席ID ${seatId} が見つかりません`);
         }
 
-        const timeString = new Date().toTimeString().substring(0, 5);
+        const timeString = getCurrentTimeString();
         const updatedSeat = {
           ...currentSeat,
           ...updates,
@@ -128,7 +139,7 @@ export function useSeatsOptimized() {
         updatingSeats.current.delete(seatId);
       }
     },
-    [updateSeatOptimistic]
+    [updateSeatOptimistic, getCurrentTimeString]
   );
 
   // 座席操作関数
@@ -197,7 +208,7 @@ export function useSeatsOptimized() {
                 id: seatId,
                 name: null,
                 is_occupied: false,
-                updated_date: new Date().toTimeString().substring(0, 5),
+                updated_date: getCurrentTimeString(),
               }
             );
           });
@@ -286,7 +297,7 @@ export function useSeatsOptimized() {
                   id: oldSeat.id,
                   name: null,
                   is_occupied: false,
-                  updated_date: new Date().toTimeString().substring(0, 5),
+                  updated_date: getCurrentTimeString(),
                 };
                 return updatedSeats; // ソートしない！順序を絶対に保持
               });
@@ -325,7 +336,7 @@ export function useSeatsOptimized() {
       supabase.removeChannel(seatsSubscription);
       supabase.removeChannel(densitySubscription);
     };
-  }, [createEmptySeats]);
+  }, [createEmptySeats, getCurrentTimeString]);
 
   return {
     seats,

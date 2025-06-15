@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Calendar, TrendingUp, Users, Activity } from "lucide-react";
@@ -30,6 +31,7 @@ interface TodayTomorrowResponse {
     tomorrow: TodayTomorrowPrediction;
   };
   error?: string;
+  details?: string;
 }
 
 interface WeeklyAverageItem {
@@ -45,9 +47,11 @@ interface WeeklyAverageResponse {
     weekly_averages: WeeklyAverageItem[];
   };
   error?: string;
+  details?: string;
 }
 
-export default function AnalyticsPage() {
+// AnalyticsPageコンポーネントをクライアントサイドでのみレンダリング
+function AnalyticsPageComponent() {
   const [todayPrediction, setTodayPrediction] =
     useState<TodayTomorrowPrediction | null>(null);
   const [tomorrowPrediction, setTomorrowPrediction] =
@@ -59,6 +63,13 @@ export default function AnalyticsPage() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isLocalApi, setIsLocalApi] = useState<boolean>(false);
   const [currentBaseUrl, setCurrentBaseUrl] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // クライアントサイドマウント確認
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 今日と明日の日付情報を取得する関数
   const getTodayTomorrowInfo = () => {
@@ -165,10 +176,12 @@ export default function AnalyticsPage() {
         setTodayPrediction(data.data.today);
         setTomorrowPrediction(data.data.tomorrow);
         console.log(`✅ 今日・明日の予測データを取得しました`);
+        setErrorDetails(null);
       } else {
         console.error("今日・明日予測データの取得失敗:", data.error);
         setTodayPrediction(null);
         setTomorrowPrediction(null);
+        setErrorDetails(data.details || data.error || null);
       }
     } catch (error) {
       console.error(`今日・明日予測データ取得エラー:`, error);
@@ -205,9 +218,11 @@ export default function AnalyticsPage() {
         console.log(
           `✅ 週間平均データを取得しました（${sortedAverages.length}日分）`
         );
+        setErrorDetails(null);
       } else {
         console.error("週間平均データの取得失敗:", data.error);
         setWeeklyAverages([]);
+        setErrorDetails(data.details || data.error || null);
       }
     } catch (error) {
       console.error(`週間平均データ取得エラー:`, error);
@@ -293,6 +308,11 @@ export default function AnalyticsPage() {
       occupied_seats: item.occupied_seats,
     }));
 
+  // サーバーサイドレンダリング時は何も表示しない
+  if (!isMounted) {
+    return null;
+  }
+
   // APIエラー時の表示
   if (apiStatus === "エラー" || apiStatus === "接続失敗") {
     return (
@@ -305,9 +325,18 @@ export default function AnalyticsPage() {
           }}
         />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center space-y-6 p-8 rounded-2xl bg-white shadow-xl border border-gray-200">
-            <h1 className="text-4xl font-bold text-gray-800">接続エラー🔌</h1>
-            <p className="text-gray-600">APIサーバーに接続できませんでした</p>
+          <div className="text-center space-y-6 p-8 rounded-2xl bg-white shadow-xl border border-gray-200 max-w-lg">
+            <h1 className="text-4xl font-bold text-gray-800">
+              サーバーエラー🔌
+            </h1>
+            <p className="text-gray-600">
+              MLサーバーでデータベース接続エラーが発生しています
+            </p>
+            {errorDetails && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-700">{errorDetails}</p>
+              </div>
+            )}
             <div className="flex gap-4 justify-center">
               <Button
                 onClick={fetchAllData}
@@ -565,3 +594,7 @@ export default function AnalyticsPage() {
     </>
   );
 }
+
+export default dynamic(() => Promise.resolve(AnalyticsPageComponent), {
+  ssr: false,
+});

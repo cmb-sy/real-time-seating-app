@@ -58,19 +58,39 @@ export async function GET(request: NextRequest) {
     );
 
     if (!response.ok) {
-      throw new Error(`MLサーバーエラー: ${response.status}`);
+      // MLサーバーからのエラーレスポンスを取得
+      let errorMessage = `MLサーバーエラー: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = `MLサーバーエラー: ${errorData.error}`;
+        }
+      } catch (parseError) {
+        // JSONパースエラーの場合はステータスコードのみ
+        console.error("MLサーバーエラーレスポンスの解析に失敗:", parseError);
+      }
+
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
 
-    // MLサーバーのレスポンスをフロントエンド形式に変換
-    const transformedData = transformTodayTomorrowResponse(data);
+    // 成功レスポンスの場合
+    if (data.success) {
+      // MLサーバーのレスポンスをフロントエンド形式に変換
+      const transformedData = transformTodayTomorrowResponse(data);
 
-    // CORSヘッダーを追加してレスポンス
-    return NextResponse.json(transformedData, {
-      status: 200,
-      headers: setCorsHeaders(),
-    });
+      // CORSヘッダーを追加してレスポンス
+      return NextResponse.json(transformedData, {
+        status: 200,
+        headers: setCorsHeaders(),
+      });
+    } else {
+      // MLサーバーからのエラーレスポンス
+      throw new Error(
+        data.error || "MLサーバーで予期しないエラーが発生しました"
+      );
+    }
   } catch (error) {
     console.error("今日・明日の予測データ取得エラー:", error);
 
@@ -80,6 +100,8 @@ export async function GET(request: NextRequest) {
       error:
         error instanceof Error ? error.message : "MLサーバーに接続できません",
       data: null,
+      details:
+        "MLサーバーでデータベース接続エラーが発生しています。管理者にお問い合わせください。",
     };
 
     return NextResponse.json(errorResponse, {

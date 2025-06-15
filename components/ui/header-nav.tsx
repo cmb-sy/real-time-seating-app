@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Calendar } from "lucide-react";
@@ -35,7 +35,20 @@ interface HeaderNavProps {
 
 export function HeaderNav({ apiStatus }: HeaderNavProps) {
   const [open, setOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState<string>("");
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+
+  // クライアントサイドマウント確認と日付設定
+  useEffect(() => {
+    setIsMounted(true);
+    setCurrentDate(
+      new Date().toLocaleDateString("ja-JP", {
+        month: "short",
+        day: "numeric",
+      })
+    );
+  }, []);
 
   // メニューを閉じる関数をメモ化
   const handleClose = useCallback(() => setOpen(false), []);
@@ -102,10 +115,8 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
                   </h1>
                   <div className="flex items-center text-xs text-slate-500 mt-0.5">
                     <Calendar className="w-3 h-3 mr-1" />
-                    {new Date().toLocaleDateString("ja-JP", {
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {/* ハイドレーションエラーを防ぐため、クライアントサイドでのみ表示 */}
+                    {isMounted ? currentDate : ""}
                   </div>
                 </Link>
               </div>
