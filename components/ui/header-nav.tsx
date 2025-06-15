@@ -13,7 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-// メニュー項目を定数として定義
+// 座席管理アプリのメニュー項目
 const MENU_ITEMS = [
   { href: "/", label: "座席表示", icon: "🪑" },
   { href: "/analytics", label: "統計分析", icon: "📊" },
@@ -54,8 +54,8 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
     let statusText = "接続失敗";
 
     if (isConnected) {
-      statusColor = isLocal ? "text-green-500" : "text-blue-500";
-      statusText = isLocal ? "ローカル" : "本番";
+      statusColor = "text-blue-500"; // プロキシAPI使用時は青色
+      statusText = "プロキシ経由";
     }
 
     return (
@@ -76,7 +76,7 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
             onClick={toggleEndpoint}
             className="text-xs h-6 px-2 hover:bg-gray-100"
           >
-            切替
+            更新
           </Button>
         )}
       </div>
@@ -93,7 +93,7 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
             <div className="flex items-center space-x-3">
               <div className="hidden sm:block">
                 <h1 className="text-lg font-bold text-slate-800">
-                  座席管理システム
+                  リアルタイム座席管理
                 </h1>
                 <div className="flex items-center text-xs text-slate-500 mt-0.5">
                   <Calendar className="w-3 h-3 mr-1" />
@@ -184,7 +184,7 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
                     {/* フッター */}
                     <div className="absolute bottom-6 left-6 right-6">
                       <div className="text-xs text-slate-400 text-center">
-                        © 2025 座席管理システム v2.0
+                        © 2025 リアルタイム座席管理 v3.0
                       </div>
                     </div>
                   </SheetContent>

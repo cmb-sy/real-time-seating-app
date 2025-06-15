@@ -1,7 +1,11 @@
-"use client"
+"use client";
 
-import SeatManagement from "../seat-management"
+import SeatManagement from "../seat-management";
 
 export default function Page() {
-  return <SeatManagement />
+  return (
+    <div className="seat-display-page">
+      <SeatManagement />
+    </div>
+  );
 }

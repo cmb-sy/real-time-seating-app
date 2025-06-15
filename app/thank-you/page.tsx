@@ -1,214 +1,256 @@
+"use client";
+
+import React from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { HeaderNav } from "@/components/ui/header-nav";
-import { Heart, Sparkles, Users, Clock, Star, Gift } from "lucide-react";
+import {
+  Heart,
+  Star,
+  Gift,
+  Sparkles,
+  Users,
+  Coffee,
+  Zap,
+  Trophy,
+} from "lucide-react";
 
 export default function ThankYouPage() {
+  const achievements = [
+    {
+      icon: <Users className="h-8 w-8" />,
+      title: "チームワーク向上",
+      description: "効率的な座席管理でチームの連携が向上しました",
+    },
+    {
+      icon: <Zap className="h-8 w-8" />,
+      title: "生産性アップ",
+      description: "リアルタイム更新により作業効率が大幅に改善",
+    },
+    {
+      icon: <Coffee className="h-8 w-8" />,
+      title: "快適な環境",
+      description: "ストレスフリーな座席選択で働きやすさが向上",
+    },
+    {
+      icon: <Trophy className="h-8 w-8" />,
+      title: "目標達成",
+      description: "スマートなオフィス運営を実現しました",
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "田中さん",
+      role: "プロジェクトマネージャー",
+      comment: "座席管理が簡単になって、チーム運営がスムーズになりました！",
+      rating: 5,
+    },
+    {
+      name: "佐藤さん",
+      role: "エンジニア",
+      comment: "リアルタイム更新が素晴らしく、とても使いやすいです。",
+      rating: 5,
+    },
+    {
+      name: "山田さん",
+      role: "デザイナー",
+      comment: "美しいUIで毎日使うのが楽しくなりました。",
+      rating: 5,
+    },
+  ];
+
   return (
-    <>
+    <div className="scrollable-page min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
       <HeaderNav />
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 relative overflow-hidden">
-        {/* 背景装飾 */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-20 h-20 bg-pink-200/30 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-32 h-32 bg-purple-200/30 rounded-full blur-xl animate-pulse delay-1000"></div>
-          <div className="absolute bottom-40 left-20 w-24 h-24 bg-blue-200/30 rounded-full blur-xl animate-pulse delay-2000"></div>
-          <div className="absolute bottom-20 right-10 w-16 h-16 bg-pink-200/30 rounded-full blur-xl animate-pulse delay-500"></div>
-        </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          {/* メインヒーローセクション */}
-          <div className="text-center mb-16">
-            <div className="flex justify-center items-center gap-4 mb-8">
-              <Sparkles className="h-12 w-12 text-yellow-500 animate-bounce" />
+      <div className="pt-24 pb-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* メインヒーロー */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 bg-pink-100 rounded-full px-4 py-2 mb-6">
+              <Heart className="h-4 w-4 text-pink-600 animate-pulse" />
+              <span className="text-pink-800 font-medium">Thank You</span>
             </div>
 
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-              ありがとうございます
-            </h1>
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mb-8"
+            >
+              <div className="relative inline-block">
+                <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+                  ありがとう
+                </h1>
+                <Sparkles className="absolute -top-4 -right-4 h-8 w-8 text-yellow-400 animate-bounce" />
+                <Gift className="absolute -bottom-2 -left-4 h-6 w-6 text-pink-400 animate-pulse" />
+              </div>
+            </motion.div>
 
-            <div className="flex justify-center items-center gap-2 mb-8">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className="h-8 w-8 fill-yellow-400 text-yellow-400 animate-pulse"
-                  style={{ animationDelay: `${i * 200}ms` }}
-                />
-              ))}
-            </div>
-
-            <p className="text-2xl md:text-3xl text-gray-700 font-medium max-w-4xl mx-auto leading-relaxed">
-              お忙しい中、貴重なお時間を割いていただき、
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8"
+            >
+              リアルタイム座席管理システムをご利用いただき、
               <br />
-              <span className="text-pink-600 font-bold">
-                本当にありがとうございました
-              </span>
-            </p>
-          </div>
+              心より感謝申し上げます 🎉
+            </motion.p>
 
-          {/* 感謝のメッセージカード */}
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            {/* 左側: 感謝のメッセージ */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/50 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-200/50 to-purple-200/50 rounded-full blur-2xl"></div>
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-full p-3">
-                    <Heart className="h-8 w-8 text-white" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-gray-800">
-                    心からの感謝
-                  </h2>
-                </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex flex-wrap justify-center gap-4"
+            >
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => (window.location.href = "/")}
+              >
+                <Heart className="h-5 w-5 mr-2" />
+                座席管理に戻る
+              </Button>
 
-                <div className="space-y-4 text-gray-700 leading-relaxed">
-                  <p className="text-lg">
-                    正直なところ、座席情報の入力は
-                    <span className="font-semibold text-purple-600">
-                      面倒な作業
-                    </span>
-                    だと思います。
-                  </p>
-                  <p className="text-lg">
-                    それでも、わざわざ手間をかけて、時間を取って、
-                    <br />
-                    <span className="font-bold text-pink-600 text-xl">
-                      ご協力いただいたこと
-                    </span>
-                    を心から感謝いたします。
-                  </p>
-                  <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 border-l-4 border-pink-400">
-                    <p className="font-semibold text-pink-800">
-                      🙏 申し訳ない気持ちと、感謝の気持ちでいっぱいです
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-2 border-purple-300 text-purple-700 hover:bg-purple-50 px-8 py-3 rounded-xl font-bold"
+                onClick={() => (window.location.href = "/analytics")}
+              >
+                <Star className="h-5 w-5 mr-2" />
+                統計を見る
+              </Button>
+            </motion.div>
+          </motion.div>
 
-            {/* 右側: システムへの貢献 */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/50 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-200/50 to-purple-200/50 rounded-full blur-2xl"></div>
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3">
-                    <Users className="h-8 w-8 text-white" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-gray-800">
-                    開発チームのために
-                  </h2>
-                </div>
-
-                <div className="space-y-4 text-gray-700 leading-relaxed">
-                  <p className="text-lg">
-                    皆様の
-                    <span className="font-semibold text-blue-600">
-                      貴重な時間とご協力
-                    </span>
-                    により、
-                  </p>
-                  <p className="text-lg">
-                    快適なシステムを維持することができています。
-                  </p>
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border-l-4 border-blue-400">
-                    <p className="font-bold text-blue-800 text-xl">
-                      ✨ 心より感謝申し上げます
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 mt-4">
-                    <Clock className="h-5 w-5 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      お忙しい業務の合間に、ありがとうございます
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 特別な感謝セクション */}
-          <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-3xl p-12 text-white text-center shadow-2xl relative overflow-hidden mb-16">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative">
-              <div className="flex justify-center items-center gap-4 mb-8">
-                <Gift className="h-12 w-12 text-yellow-300 animate-bounce" />
-                <Sparkles className="h-16 w-16 text-yellow-300 animate-pulse" />
-                <Gift className="h-12 w-12 text-yellow-300 animate-bounce delay-500" />
-              </div>
-
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                あなたは素晴らしい！
-              </h2>
-
-              <p className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed">
-                お忙しい中、手間をかけさせてしまい申し訳ございません。
-                <br />
-                それでも、
-                <span className="font-bold text-yellow-300">
-                  開発チームのために時間を使ってくださった
-                </span>
-                ことに
-                <br />
-                <span className="text-3xl font-bold">深く感謝しています</span>
-              </p>
-
-              <div className="grid md:grid-cols-3 gap-6 mt-12">
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
-                  <Heart className="h-10 w-10 text-red-300 mx-auto mb-3" />
-                  <h3 className="font-bold text-lg mb-2">思いやり</h3>
-                  <p className="text-sm text-white/90">
-                    みんなのことを考えて行動してくださる
-                  </p>
-                </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
-                  <Clock className="h-10 w-10 text-blue-300 mx-auto mb-3" />
-                  <h3 className="font-bold text-lg mb-2">時間の投資</h3>
-                  <p className="text-sm text-white/90">
-                    貴重な時間を共有のために使ってくださる
-                  </p>
-                </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
-                  <Users className="h-10 w-10 text-green-300 mx-auto mb-3" />
-                  <h3 className="font-bold text-lg mb-2">チームワーク</h3>
-                  <p className="text-sm text-white/90">
-                    みんなで作り上げる素晴らしいシステム
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 最終メッセージ */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 shadow-2xl text-center border border-white/50">
-            <div className="flex justify-center items-center gap-2 mb-6">
-              {[...Array(7)].map((_, i) => (
-                <Heart
-                  key={i}
-                  className="h-6 w-6 text-red-500 animate-pulse"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                />
-              ))}
-            </div>
-
-            <h2 className="text-4xl font-bold text-gray-800 mb-6">
-              🏢 座席管理システム
+          {/* 成果セクション */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mb-16"
+          >
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
+              あなたの成果
             </h2>
 
-            <p className="text-xl text-gray-700 leading-relaxed mb-8 max-w-3xl mx-auto">
-              今後ともご協力いただけましたら幸いです。
-              <br />
-              皆様のおかげで、このシステムは成り立っています。
-            </p>
-
-            <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
-              <p className="text-lg font-semibold text-gray-800 mb-2">
-                🙇‍♂️ 改めて、心からお礼申し上げます
-              </p>
-              <p className="text-gray-600">
-                あなたの協力が、みんなの快適な職場環境を支えています
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {achievements.map((achievement, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.9 + index * 0.1 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 text-center hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="text-purple-600 mb-4 flex justify-center">
+                    {achievement.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">
+                    {achievement.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {achievement.description}
+                  </p>
+                </motion.div>
+              ))}
             </div>
-          </div>
+          </motion.div>
+
+          {/* お客様の声 */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+            className="mb-16"
+          >
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
+              お客様の声
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((testimonial, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 1.3 + index * 0.1 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20"
+                >
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-5 w-5 text-yellow-400 fill-current"
+                      />
+                    ))}
+                  </div>
+
+                  <p className="text-gray-600 mb-4 italic">
+                    "{testimonial.comment}"
+                  </p>
+
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="font-semibold text-gray-800">
+                      {testimonial.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {testimonial.role}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* 最終メッセージ */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.6 }}
+            className="text-center"
+          >
+            <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-3xl p-8 text-white relative overflow-hidden">
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+              <div className="relative">
+                <Heart className="h-16 w-16 mx-auto mb-6 text-pink-200 animate-pulse" />
+                <h2 className="text-3xl font-bold mb-4">
+                  今後ともよろしくお願いします
+                </h2>
+                <p className="text-purple-100 mb-6 max-w-2xl mx-auto text-lg">
+                  皆様のフィードバックを大切にし、
+                  より良いサービスの提供に努めてまいります。
+                  引き続きご愛用ください。
+                </p>
+                <div className="flex flex-wrap justify-center gap-4">
+                  <Button
+                    variant="outline"
+                    className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                    onClick={() => (window.location.href = "/contact")}
+                  >
+                    ご意見・ご要望
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                    onClick={() => (window.location.href = "/about")}
+                  >
+                    サービス詳細
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, MessageSquare, Users, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Label } from "@/components/ui/label";
 import { HeaderNav } from "@/components/ui/header-nav";
 
@@ -136,11 +136,11 @@ export default function ContactPage() {
                       <MessageSquare className="h-5 w-5 text-blue-600" />
                       ご要望内容
                     </Label>
-                    <Textarea
+                    <textarea
                       id="message"
                       name="message"
                       placeholder="デザインがダサすぎる"
-                      className="min-h-[140px] text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl transition-all duration-200 bg-white/70 backdrop-blur-sm resize-none"
+                      className="min-h-[140px] text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl transition-all duration-200 bg-white/70 backdrop-blur-sm resize-none w-full px-4 py-3 focus:outline-none focus:ring-0"
                       required
                     />
                   </div>

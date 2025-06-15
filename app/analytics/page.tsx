@@ -14,18 +14,7 @@ import {
   LabelList,
 } from "recharts";
 import { HeaderNav } from "@/components/ui/header-nav";
-
-// API設定
-const API_ENDPOINTS = {
-  LOCAL: {
-    TODAY_TOMORROW: "http://localhost:8000/api/predictions/today-tomorrow",
-    WEEKLY_AVERAGE: "http://localhost:8000/api/predictions/weekly-average",
-  },
-  PRODUCTION: {
-    TODAY_TOMORROW: "/api/predictions/today-tomorrow",
-    WEEKLY_AVERAGE: "/api/predictions/weekly-average",
-  },
-};
+import { getApiConfig, checkApiAvailability } from "@/lib/api-config";
 
 interface TodayTomorrowPrediction {
   date: string;
@@ -65,13 +54,11 @@ export default function AnalyticsPage() {
     useState<TodayTomorrowPrediction | null>(null);
   const [weeklyAverages, setWeeklyAverages] = useState<WeeklyAverageItem[]>([]);
   const [apiStatus, setApiStatus] = useState<string>("接続中");
-  const [currentEndpoint, setCurrentEndpoint] = useState<
-    "LOCAL" | "PRODUCTION"
-  >("LOCAL");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [isLocalApi, setIsLocalApi] = useState<boolean>(true);
+  const [isLocalApi, setIsLocalApi] = useState<boolean>(false);
+  const [currentBaseUrl, setCurrentBaseUrl] = useState<string>("");
 
   // 今日と明日の日付情報を取得する関数
   const getTodayTomorrowInfo = () => {
@@ -88,88 +75,54 @@ export default function AnalyticsPage() {
       day: "numeric",
     });
 
-    // 曜日名を日本語で取得
-    const getJapaneseWeekday = (date: Date) => {
-      const weekdays = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日"];
-      return weekdays[date.getDay()];
-    };
-
-    return {
-      todayDate,
-      tomorrowDate,
-      todayWeekday: getJapaneseWeekday(today),
-      tomorrowWeekday: getJapaneseWeekday(tomorrow),
-    };
+    return { todayDate, tomorrowDate };
   };
 
-  // API接続テスト＆エンドポイント決定
-  const determineApiEndpoint = async (): Promise<"LOCAL" | "PRODUCTION"> => {
-    console.log("APIエンドポイントの決定を開始...");
+  // API接続確認とエンドポイント決定
+  const initializeApiConnection = async () => {
+    console.log("API接続の初期化を開始...");
 
     try {
-      // まずローカルAPIを試行
-      console.log("ローカルAPIを試行中:", API_ENDPOINTS.LOCAL.TODAY_TOMORROW);
-      const localResponse = await fetch(API_ENDPOINTS.LOCAL.TODAY_TOMORROW, {
-        method: "HEAD", // HEADメソッドで軽量チェック
-        signal: AbortSignal.timeout(3000), // 3秒でタイムアウト
-      });
+      const availability = await checkApiAvailability();
 
-      if (localResponse.ok) {
-        console.log("✅ ローカルAPIサーバーが利用可能です");
+      setIsLocalApi(availability.isLocal);
+      setCurrentBaseUrl(availability.baseUrl || "");
+
+      if (availability.activeEndpoint === "local") {
         setApiStatus("ローカル接続");
+        console.log("✅ ローカルバックエンドに接続しました");
         setIsConnected(true);
-        setIsLocalApi(true);
-        return "LOCAL";
-      } else {
-        console.log(
-          `❌ ローカルAPI応答エラー: ${localResponse.status} ${localResponse.statusText}`
-        );
-      }
-    } catch (error) {
-      console.log("❌ ローカルAPIサーバーが利用できません:", error);
-    }
-
-    try {
-      // 本番APIを試行
-      console.log("本番APIを試行中:", API_ENDPOINTS.PRODUCTION.TODAY_TOMORROW);
-      const prodResponse = await fetch(
-        API_ENDPOINTS.PRODUCTION.TODAY_TOMORROW,
-        {
-          method: "HEAD",
-          signal: AbortSignal.timeout(5000), // 5秒でタイムアウト
-        }
-      );
-
-      if (prodResponse.ok) {
-        console.log("✅ 本番APIサーバーが利用可能です");
-        setApiStatus("本番接続");
+      } else if (availability.activeEndpoint === "production") {
+        setApiStatus("本番ML接続");
+        console.log("✅ 本番MLサーバーに接続しました");
         setIsConnected(true);
-        setIsLocalApi(false);
-        return "PRODUCTION";
       } else {
-        console.log(
-          `❌ 本番API応答エラー: ${prodResponse.status} ${prodResponse.statusText}`
-        );
+        setApiStatus("接続失敗");
+        console.log("❌ どちらのAPIサーバーも利用できません");
+        setIsConnected(false);
       }
-    } catch (error) {
-      console.error("❌ 本番APIサーバーエラー:", error);
-    }
 
-    console.error("❌ すべてのAPIエンドポイントが利用できません");
-    setApiStatus("接続失敗");
-    setIsConnected(false);
-    throw new Error("すべてのAPIエンドポイントが利用できません");
+      return availability.baseUrl;
+    } catch (error) {
+      console.error("❌ API接続の初期化に失敗:", error);
+      setApiStatus("接続失敗");
+      setIsConnected(false);
+      throw error;
+    }
   };
 
-  // 安全なフェッチ関数（エラーハンドリング強化）
-  const safeFetch = async (url: string, options: RequestInit = {}) => {
+  // 安全なフェッチ関数
+  const safeFetch = async (url: string, timeout: number = 15000) => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 100000); // 10秒でタイムアウト
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
       const response = await fetch(url, {
-        ...options,
+        method: "GET",
         signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       clearTimeout(timeoutId);
       return response;
@@ -179,120 +132,116 @@ export default function AnalyticsPage() {
     }
   };
 
-  // 今日・明日の予測データを取得（エンドポイント自動選択対応）
-  const fetchTodayTomorrowPredictions = async (
-    endpoint: "LOCAL" | "PRODUCTION"
-  ) => {
+  // 今日・明日の予測データを取得
+  const fetchTodayTomorrowPredictions = async (baseUrl: string) => {
     try {
-      const url = API_ENDPOINTS[endpoint].TODAY_TOMORROW;
-      const response = await safeFetch(url);
+      const url = `${baseUrl}/api/predictions/today-tomorrow`;
+      console.log(`📅 今日・明日の予測データを取得中: ${url}`);
+
+      const response = await safeFetch(url, 15000);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: TodayTomorrowResponse = await response.json();
-      console.log(`📅 今日・明日のAPIレスポンス (${endpoint}):`, data);
+      console.log(`📅 今日・明日のAPIレスポンス:`, data);
 
       if (data.success && data.data) {
         setTodayPrediction(data.data.today);
         setTomorrowPrediction(data.data.tomorrow);
-        console.log(
-          `✅ 今日・明日の予測データを${
-            endpoint === "LOCAL" ? "ローカル" : "本番"
-          }から取得しました:`,
-          { today: data.data.today, tomorrow: data.data.tomorrow }
-        );
+        console.log(`✅ 今日・明日の予測データを取得しました`);
       } else {
         console.error("今日・明日予測データの取得失敗:", data.error);
         setTodayPrediction(null);
         setTomorrowPrediction(null);
       }
     } catch (error) {
-      console.error(`今日・明日予測データ取得エラー (${endpoint}):`, error);
+      console.error(`今日・明日予測データ取得エラー:`, error);
       setTodayPrediction(null);
       setTomorrowPrediction(null);
-      throw error; // エラーを上位に伝播
+      throw error;
     }
   };
 
-  // 週間平均データを取得（エンドポイント自動選択対応）
-  const fetchWeeklyAverages = async (endpoint: "LOCAL" | "PRODUCTION") => {
+  // 週間平均データを取得
+  const fetchWeeklyAverages = async (baseUrl: string) => {
     try {
-      const url = API_ENDPOINTS[endpoint].WEEKLY_AVERAGE;
-      const response = await safeFetch(url);
+      const url = `${baseUrl}/api/predictions/weekly-average`;
+      console.log(`📊 週間平均データを取得中: ${url}`);
+
+      const response = await safeFetch(url, 15000);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: WeeklyAverageResponse = await response.json();
-      console.log(`📊 週間平均のAPIレスポンス (${endpoint}):`, data);
+      console.log(`📊 週間平均のAPIレスポンス:`, data);
 
       if (data.success && data.data) {
-        // 曜日順にソート（月曜=0から日曜=6）
         const sortedAverages = data.data.weekly_averages.sort(
           (a, b) => a.weekday - b.weekday
         );
         setWeeklyAverages(sortedAverages);
-        console.log(
-          `✅ 週間平均データを${
-            endpoint === "LOCAL" ? "ローカル" : "本番"
-          }から取得しました:`,
-          sortedAverages
-        );
+        console.log(`✅ 週間平均データを取得しました`);
       } else {
         console.error("週間平均データの取得失敗:", data.error);
         setWeeklyAverages([]);
       }
     } catch (error) {
-      console.error(`週間平均データ取得エラー (${endpoint}):`, error);
+      console.error(`週間平均データ取得エラー:`, error);
       setWeeklyAverages([]);
-      throw error; // エラーを上位に伝播
+      throw error;
     }
   };
 
-  // 全データを取得する統合関数（フォールバック機能付き）
+  // 全データを取得する統合関数
   const fetchAllData = async () => {
     setIsLoading(true);
 
     try {
-      // APIエンドポイントを決定
-      const selectedEndpoint = await determineApiEndpoint();
-      setCurrentEndpoint(selectedEndpoint);
+      const baseUrl = await initializeApiConnection();
+
+      if (!baseUrl) {
+        throw new Error("利用可能なAPIサーバーがありません");
+      }
 
       // 並列でデータを取得
       await Promise.all([
-        fetchTodayTomorrowPredictions(selectedEndpoint),
-        fetchWeeklyAverages(selectedEndpoint),
+        fetchTodayTomorrowPredictions(baseUrl),
+        fetchWeeklyAverages(baseUrl),
       ]);
 
       setLastUpdated(new Date());
     } catch (error) {
       console.error("データ取得処理でエラーが発生しました:", error);
       setApiStatus("エラー");
+      setIsConnected(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 手動でエンドポイントを切り替える関数
-  const switchEndpoint = async () => {
-    const newEndpoint = currentEndpoint === "LOCAL" ? "PRODUCTION" : "LOCAL";
-    setCurrentEndpoint(newEndpoint);
-    setApiStatus("切り替え中");
-    setIsLocalApi(newEndpoint === "LOCAL");
+  // 手動でデータを再取得する関数（エンドポイント切り替えは削除）
+  const refreshData = async () => {
+    if (!currentBaseUrl) {
+      console.error("ベースURLが設定されていません");
+      return;
+    }
+
+    setApiStatus("更新中");
 
     try {
       await Promise.all([
-        fetchTodayTomorrowPredictions(newEndpoint),
-        fetchWeeklyAverages(newEndpoint),
+        fetchTodayTomorrowPredictions(currentBaseUrl),
+        fetchWeeklyAverages(currentBaseUrl),
       ]);
-      setApiStatus(newEndpoint === "LOCAL" ? "ローカル接続" : "本番接続");
+      setApiStatus(isLocalApi ? "ローカル接続" : "本番ML接続");
       setIsConnected(true);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error("エンドポイント切り替えでエラー:", error);
+      console.error("データ更新でエラー:", error);
       setApiStatus("エラー");
       setIsConnected(false);
     }
@@ -300,11 +249,7 @@ export default function AnalyticsPage() {
 
   // 初期化とデータ更新の設定
   useEffect(() => {
-    const initializeData = async () => {
-      await fetchAllData();
-    };
-
-    initializeData();
+    fetchAllData();
 
     // 5分ごとにデータを更新
     const interval = setInterval(() => {
@@ -318,26 +263,11 @@ export default function AnalyticsPage() {
   const chartData = weeklyAverages
     .sort((a, b) => a.weekday - b.weekday)
     .map((item) => ({
-      day: item.weekday_name.replace("曜日", "曜"), // "月曜日" → "月曜"
+      day: item.weekday_name.replace("曜日", "曜"),
       weekday: item.weekday,
       occupancy_rate: item.occupancy_rate * 100,
       occupied_seats: item.occupied_seats,
     }));
-
-  // デバッグ用ログ
-  console.log("📊 グラフデータ:", {
-    weeklyAverages,
-    chartData,
-    todayPrediction,
-    tomorrowPrediction,
-    apiStatus,
-    isConnected,
-    isLoading,
-    chartDataLength: chartData.length,
-    hasWeeklyData: weeklyAverages.length > 0,
-    hasTodayData: !!todayPrediction,
-    hasTomorrowData: !!tomorrowPrediction,
-  });
 
   // APIエラー時の表示
   if (apiStatus === "エラー" || apiStatus === "接続失敗") {
@@ -347,15 +277,13 @@ export default function AnalyticsPage() {
           apiStatus={{
             isConnected: false,
             isLocal: isLocalApi,
-            toggleEndpoint: switchEndpoint,
+            toggleEndpoint: refreshData,
           }}
         />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center space-y-6 p-8 rounded-2xl bg-white shadow-xl border border-gray-200">
             <h1 className="text-4xl font-bold text-gray-800">接続エラー🔌</h1>
-            <p className="text-gray-600">
-              ローカル・本番両方のAPIサーバーに接続できませんでした
-            </p>
+            <p className="text-gray-600">APIサーバーに接続できませんでした</p>
             <div className="flex gap-4 justify-center">
               <Button
                 onClick={fetchAllData}
@@ -386,7 +314,7 @@ export default function AnalyticsPage() {
         apiStatus={{
           isConnected,
           isLocal: isLocalApi,
-          toggleEndpoint: switchEndpoint,
+          toggleEndpoint: refreshData,
         }}
       />
       {/* ローディング表示 */}
@@ -401,7 +329,7 @@ export default function AnalyticsPage() {
         </div>
       )}
       {/* メインコンテンツ */}
-      <div className="pt-8 pb-12">
+      <div className="pt-8 pb-12 scrollable-page">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* ページタイトル */}
           <div className="mb-8">
@@ -543,31 +471,24 @@ export default function AnalyticsPage() {
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="text-center py-16 text-gray-500">
-                    <Activity className="h-12 w-12 mx-auto mb-3 animate-pulse" />
-                    <p className="text-lg">
-                      {isLoading
-                        ? "データを分析中..."
-                        : "週間データがありません"}
-                    </p>
-                    {!isLoading && (
-                      <p className="text-sm mt-2">
-                        API接続: {apiStatus} | データ件数: {chartData.length}
-                      </p>
-                    )}
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-center">
+                      <div className="text-gray-400 mb-2">📊</div>
+                      <p className="text-gray-500">データを読み込み中...</p>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* 社内人口密度率グラフ */}
+            {/* 人口密度率グラフ */}
             <Card className="bg-white shadow-lg border border-gray-200">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-3 text-gray-900">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <Users className="h-6 w-6 text-emerald-600" />
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Users className="h-6 w-6 text-green-600" />
                   </div>
-                  社内人口密度率の週間平均
+                  人口密度率の週間平均
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -587,38 +508,27 @@ export default function AnalyticsPage() {
                           tickLine={true}
                           height={60}
                         />
-                        <YAxis
-                          unit="%"
-                          domain={[0, 100]}
-                          allowDecimals={false}
-                        />
+                        <YAxis domain={[0, 100]} allowDecimals={false} />
                         <Bar
                           dataKey="occupancy_rate"
                           barSize={40}
-                          fill="#b3f7c1"
+                          fill="#86efac"
                         >
                           <LabelList
                             dataKey="occupancy_rate"
                             position="top"
-                            formatter={(val: number) => `${val.toFixed(1)}`}
+                            formatter={(val: number) => `${val.toFixed(1)}%`}
                           />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="text-center py-16 text-gray-500">
-                    <Users className="h-12 w-12 mx-auto mb-3 animate-pulse" />
-                    <p className="text-lg">
-                      {isLoading
-                        ? "データを分析中..."
-                        : "週間データがありません"}
-                    </p>
-                    {!isLoading && (
-                      <p className="text-sm mt-2">
-                        API接続: {apiStatus} | データ件数: {chartData.length}
-                      </p>
-                    )}
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-center">
+                      <div className="text-gray-400 mb-2">📊</div>
+                      <p className="text-gray-500">データを読み込み中...</p>
+                    </div>
                   </div>
                 )}
               </CardContent>

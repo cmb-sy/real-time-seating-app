@@ -1,33 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { User, UserX, Users } from "lucide-react";
-import { useSeats } from "@/hooks/use-seats";
+import React, { useState, useEffect, useCallback } from "react";
+import { Users, Sparkles, Zap } from "lucide-react";
+import { SeatGrid } from "@/components/seat-grid";
+import { SeatDialog } from "@/components/seat-dialog";
+import { useSeatsOptimized } from "@/hooks/use-seats-optimized";
 import { useConfetti } from "@/hooks/use-confetti";
-
-interface Seat {
-  id: number;
-  name: string | null;
-  is_occupied: boolean;
-  updated_date?: string; // 更新時間のフィールド追加
-}
 
 export default function SeatManagement() {
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  // リアルタイムの座席データを取得するカスタムフックを使用
+  // 最適化されたフックを使用
   const {
     seats,
     loading,
@@ -36,298 +19,267 @@ export default function SeatManagement() {
     releaseSeat,
     updateDensity,
     updateName,
-  } = useSeats();
+  } = useSeatsOptimized();
+
   const { triggerConfetti } = useConfetti();
 
+  // 状態管理
   const [editingSeat, setEditingSeat] = useState<number | null>(null);
   const [inputName, setInputName] = useState("");
-
   const [confirmingSeat, setConfirmingSeat] = useState<number | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isDialogEditing, setIsDialogEditing] = useState(false);
+  const [isDensitySelectOpen, setIsDensitySelectOpen] = useState(false);
 
-  const handleSeatClick = (seatId: number) => {
-    const seat = seats.find((s) => s.id === seatId);
-    if (!seat) return;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    if (seat.is_occupied) {
-      // 着席中の場合は操作ダイアログを表示
-      setConfirmingSeat(seatId);
-      setIsConfirmDialogOpen(true);
-    } else {
-      // 空席の場合は直接インライン編集モード
-      setEditingSeat(seatId);
-      setInputName("");
-    }
-  };
+  // 座席クリック処理
+  const handleSeatClick = useCallback(
+    (seatId: number) => {
+      const seat = seats.find((s) => s.id === seatId);
+      if (!seat) return;
 
-  const handleNameConfirm = async (seatId: number | null) => {
-    if (!seatId || !inputName.trim()) {
-      setEditingSeat(null);
-      setIsConfirmDialogOpen(false);
-      return;
-    }
-
-    const seat = seats.find((s) => s.id === seatId);
-    if (!seat) return;
-
-    // 名前編集中かどうかをチェック（操作ダイアログから編集中）
-    const isEditing = editingSeat === confirmingSeat;
-
-    if (seat.is_occupied || isEditing) {
-      // 着席中または編集中の場合は名前の更新のみ
-      await updateName(seatId, inputName.trim());
-    } else {
-      // 空席への新規着席の場合
-      await occupySeat(seatId, inputName.trim());
-      // クラッカーアニメーションを発火
-      triggerConfetti(`seat-${seatId}`);
-    }
-
-    setEditingSeat(null);
-    setInputName("");
-    setIsConfirmDialogOpen(false);
-  };
-
-  const handleEditCancel = () => {
-    setEditingSeat(null);
-    setInputName("");
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent, seatId: number) => {
-    if (e.key === "Enter") {
-      handleNameConfirm(seatId);
-    } else if (e.key === "Escape") {
-      handleEditCancel();
-    }
-  };
-
-  const handleConfirmLeave = async () => {
-    try {
-      if (confirmingSeat !== null) {
-        // 座席を解放
-        await releaseSeat(confirmingSeat);
+      if (seat.is_occupied) {
+        // 着席中の場合はダイアログを表示
+        setConfirmingSeat(seatId);
+        setIsConfirmDialogOpen(true);
+        setIsDialogEditing(false);
       } else {
-        console.error("退席処理失敗: confirmingSeat が null です");
+        // 空席の場合は直接編集モード
+        setEditingSeat(seatId);
+        setInputName("");
       }
-    } catch (error) {
-      console.error("退席処理エラー:", error);
-    } finally {
-      setIsConfirmDialogOpen(false);
-      setConfirmingSeat(null);
+    },
+    [seats]
+  );
+
+  // 名前確定処理
+  const handleNameConfirm = useCallback(
+    async (seatId: number) => {
+      if (!inputName.trim()) {
+        setEditingSeat(null);
+        return;
+      }
+
+      const seat = seats.find((s) => s.id === seatId);
+      if (!seat) return;
+
+      try {
+        if (seat.is_occupied || isDialogEditing) {
+          // 名前の更新のみ
+          await updateName(seatId, inputName.trim());
+        } else {
+          // 新規着席
+          await occupySeat(seatId, inputName.trim());
+          // 着席成功時にクラッカーアニメーション
+          triggerConfetti(`seat-${seatId}`);
+        }
+      } catch (error) {
+        console.error("座席操作エラー:", error);
+      } finally {
+        setEditingSeat(null);
+        setInputName("");
+        setIsDialogEditing(false);
+      }
+    },
+    [inputName, seats, isDialogEditing, updateName, occupySeat, triggerConfetti]
+  );
+
+  // キーボード操作
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent, seatId: number) => {
+      if (e.key === "Enter") {
+        handleNameConfirm(seatId);
+      } else if (e.key === "Escape") {
+        setEditingSeat(null);
+        setInputName("");
+      }
+    },
+    [handleNameConfirm]
+  );
+
+  // ダイアログ操作
+  const handleStartEdit = useCallback(() => {
+    const seat = seats.find((s) => s.id === confirmingSeat);
+    if (seat) {
+      setIsDialogEditing(true);
+      setInputName(seat.name || "");
     }
-  };
+  }, [seats, confirmingSeat]);
 
-  // 夕方の時間チェックをuseSeatsフックに移動（コンポーネント内での状態管理を減らす）
+  const handleConfirmEdit = useCallback(() => {
+    if (confirmingSeat) {
+      handleNameConfirm(confirmingSeat);
+    }
+  }, [confirmingSeat, handleNameConfirm]);
 
-  // ローディング中はローディング表示
+  const handleCancelEdit = useCallback(() => {
+    setIsDialogEditing(false);
+    setInputName("");
+  }, []);
+
+  const handleLeave = useCallback(async () => {
+    if (confirmingSeat) {
+      try {
+        await releaseSeat(confirmingSeat);
+      } catch (error) {
+        console.error("退席処理エラー:", error);
+      }
+    }
+  }, [confirmingSeat, releaseSeat]);
+
+  const handleDialogKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && confirmingSeat) {
+        handleConfirmEdit();
+      }
+    },
+    [confirmingSeat, handleConfirmEdit]
+  );
+
+  // ローディング表示
   if (loading) {
     return (
-      <div className="min-h-screen p-4 bg-white flex items-center justify-center">
-        <div className="text-lg">座席情報を読み込み中...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto" />
+            <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-blue-600" />
+          </div>
+          <div className="text-xl font-semibold text-gray-700">
+            座席情報を読み込み中...
+          </div>
+        </div>
       </div>
     );
   }
 
-  // クライアントサイドでのレンダリングが準備できていない場合は何も表示しない
   if (!mounted) return null;
 
+  const currentSeat = confirmingSeat
+    ? seats.find((s) => s.id === confirmingSeat)
+    : null;
+
   return (
-    <div className="min-h-screen bg-white flex flex-col relative">
-      {/* 人口密度率表示 - 左上に固定配置 */}
-      <div className="absolute top-20 left-10 z-10">
-        <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm">
-          社内人口密度率：
-          <select
-            value={densityValue}
-            onChange={(e) => updateDensity(Number(e.target.value))}
-            className="text-sm font-medium bg-transparent border-none outline-none text-slate-700 cursor-pointer rounded-lg px-3 py-2 shadow-md border border-gray-200"
-          >
-            <option value={0}>0%</option>
-            <option value={10}>10%</option>
-            <option value={20}>20%</option>
-            <option value={30}>30%</option>
-            <option value={40}>40%</option>
-            <option value={50}>50%</option>
-            <option value={60}>60%</option>
-            <option value={70}>70%</option>
-            <option value={80}>80%</option>
-            <option value={90}>90%</option>
-            <option value={100}>100%</option>
-          </select>
-        </div>
+    <div className="h-screen w-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden fixed inset-0">
+      {/* 背景装飾 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl" />
       </div>
 
-      {/* 中央エリア: 座席レイアウト - 完全に中央に配置 */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-5xl bg-gray-50 p-8 rounded-xl border border-gray-200 shadow-sm">
-          {/* 4×2のグリッドレイアウト - 席を大きく */}
-          <div className="grid grid-cols-4 grid-rows-2 gap-10 mx-auto">
-            {seats.map((seat) => (
-              <div key={seat.id} className="relative h-40">
-                {!seat.is_occupied && editingSeat === seat.id ? (
-                  <Input
-                    value={inputName}
-                    onChange={(e) => setInputName(e.target.value)}
-                    onKeyDown={(e) => handleKeyPress(e, seat.id)}
-                    onBlur={() => handleNameConfirm(seat.id)}
-                    placeholder="名前"
-                    className="h-40 w-full text-center text-xl border border-gray-300 rounded-lg shadow-sm"
-                    autoFocus
-                  />
-                ) : (
-                  <Button
-                    id={`seat-${seat.id}`}
-                    variant={seat.is_occupied ? "default" : "outline"}
-                    className={`
-                        h-40 w-full flex flex-col items-center justify-center relative
-                        ${
-                          seat.is_occupied
-                            ? "bg-blue-500 hover:bg-blue-600 text-white p-4 pb-8"
-                            : "hover:bg-gray-100 border border-gray-300 p-4"
-                        }
-                        transition-all duration-150 rounded-lg shadow-sm
-                      `}
-                    onClick={() => handleSeatClick(seat.id)}
-                  >
-                    <div
-                      className={`flex items-center justify-center ${
-                        seat.is_occupied ? "mb-2" : ""
-                      }`}
-                      style={{
-                        marginTop: seat.is_occupied ? "0" : "auto",
-                        marginBottom: seat.is_occupied ? "0" : "auto",
-                      }}
-                    >
-                      <span className="font-medium text-base mr-2">
-                        席{seat.id}
-                      </span>
-                      {seat.is_occupied ? (
-                        <User className="h-5 w-5" />
-                      ) : (
-                        <UserX className="h-5 w-5" />
-                      )}
-                    </div>
-                    {seat.is_occupied && seat.name && (
-                      <div
-                        className="text-4xl font-medium w-full px-1 text-center break-words overflow-hidden mb-3"
-                        style={{
-                          maxHeight: "4rem",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          wordBreak: "break-word",
-                        }}
-                        title={seat.name}
-                      >
-                        {seat.name}
-                      </div>
-                    )}
-                    {seat.is_occupied && seat.updated_date && (
-                      <div className="text-xs text-center opacity-70 absolute bottom-2 w-full left-0">
-                        {seat.updated_date.substring(0, 5)}
-                        更新
-                      </div>
-                    )}
-                  </Button>
-                )}
+      {/* ヘッダー - 人口密度率表示 */}
+      <div className="absolute top-20 left-4 z-20">
+        <div className="relative">
+          <div
+            className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-3 cursor-pointer hover:bg-white/90 transition-all duration-200 hover:shadow-xl"
+            onClick={() => setIsDensitySelectOpen(!isDensitySelectOpen)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                <Users className="w-4 h-4 text-white" />
               </div>
-            ))}
-          </div>
-          {/* 入り口側の表示 - 画面下部に配置 */}
-          <div className="mt-8 text-center">
-            <div className="inline-block border border-gray-400 rounded px-8 py-2 text-gray-600 font-medium">
-              入り口側
+              <div>
+                <div className="text-xs font-medium text-gray-600">
+                  社内人口密度率
+                </div>
+                <div className="text-base font-bold text-gray-800">
+                  {densityValue}%
+                </div>
+              </div>
+              <div
+                className={`ml-2 transition-transform duration-200 ${
+                  isDensitySelectOpen ? "rotate-180" : ""
+                }`}
+              >
+                <svg
+                  className="w-4 h-4 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
+
+          {/* ドロップダウンリスト */}
+          {isDensitySelectOpen && (
+            <div className="absolute top-full mt-2 left-0 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 py-2 min-w-[200px] max-h-64 overflow-y-auto">
+              {Array.from({ length: 11 }, (_, i) => i * 10).map((value) => (
+                <button
+                  key={value}
+                  onClick={() => {
+                    updateDensity(value);
+                    setIsDensitySelectOpen(false);
+                  }}
+                  className={`
+                    w-full px-4 py-3 text-left transition-all duration-200 flex items-center justify-between hover:bg-blue-50
+                    ${
+                      densityValue === value
+                        ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                        : "text-gray-700"
+                    }
+                  `}
+                >
+                  <span className="font-medium">{value}%</span>
+                  {densityValue === value && (
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 退席確認ダイアログ */}
-      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent
-          aria-describedby="seat-operation-description"
-          className="sm:max-w-md"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle>座席の操作</DialogTitle>
-            <DialogDescription id="seat-operation-description">
-              座席の名前編集や退席などの操作ができます
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {editingSeat === confirmingSeat ? (
-              <>
-                <p>席{confirmingSeat}の名前を編集</p>
-                <Input
-                  value={inputName}
-                  onChange={(e) => setInputName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && confirmingSeat !== null) {
-                      handleNameConfirm(confirmingSeat);
-                      setIsConfirmDialogOpen(false);
-                    }
-                  }}
-                  placeholder="名前を入力"
-                  className="text-lg"
-                  autoFocus
-                />
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setEditingSeat(null);
-                      setInputName("");
-                      setIsConfirmDialogOpen(false);
-                    }}
-                  >
-                    キャンセル
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      handleNameConfirm(confirmingSeat);
-                      setIsConfirmDialogOpen(false);
-                    }}
-                  >
-                    保存
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p>席{confirmingSeat}の操作を選択してください</p>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const seat = seats.find((s) => s.id === confirmingSeat);
-                      if (seat) {
-                        setEditingSeat(confirmingSeat);
-                        setInputName(seat.name || "");
-                      }
-                    }}
-                  >
-                    名前を編集
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleConfirmLeave}
-                    className="bg-red-50 hover:bg-red-100"
-                  >
-                    退席する
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsConfirmDialogOpen(false)}
-                  >
-                    キャンセル
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* 背景クリックで閉じる */}
+      {isDensitySelectOpen && (
+        <div
+          className="fixed inset-0 z-10"
+          onClick={() => setIsDensitySelectOpen(false)}
+        />
+      )}
+
+      {/* メインコンテンツ - 完全に中央配置、固定サイズ */}
+      <div className="absolute inset-0 flex items-center justify-center p-4 z-10">
+        <div className="w-full h-full max-w-6xl max-h-[calc(100vh-2rem)] flex items-center justify-center">
+          {/* 座席グリッド */}
+          <SeatGrid
+            seats={seats}
+            editingSeat={editingSeat}
+            inputName={inputName}
+            onSeatClick={handleSeatClick}
+            onInputChange={setInputName}
+            onInputKeyDown={handleKeyPress}
+            onInputBlur={handleNameConfirm}
+          />
+        </div>
+      </div>
+
+      {/* 座席操作ダイアログ */}
+      <SeatDialog
+        isOpen={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+        seatId={confirmingSeat}
+        seatName={currentSeat?.name || null}
+        isEditing={isDialogEditing}
+        inputName={inputName}
+        onInputChange={setInputName}
+        onStartEdit={handleStartEdit}
+        onConfirmEdit={handleConfirmEdit}
+        onCancelEdit={handleCancelEdit}
+        onLeave={handleLeave}
+        onInputKeyDown={handleDialogKeyDown}
+      />
     </div>
   );
 }

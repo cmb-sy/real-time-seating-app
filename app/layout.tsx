@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "./providers/AuthProvider";
 import { HeaderNav } from "@/components/ui/header-nav";
 
 export const metadata: Metadata = {
@@ -20,12 +19,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="bg-white">
-        <AuthProvider>
-          <div className="relative min-h-screen">
-            <HeaderNav />
-            <main>{children}</main>
-          </div>
-        </AuthProvider>
+        <div className="relative min-h-screen">
+          <HeaderNav />
+          <main>{children}</main>
+        </div>
       </body>
     </html>
   );
