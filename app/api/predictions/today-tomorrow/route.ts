@@ -38,29 +38,15 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("今日・明日の予測データ取得エラー:", error);
 
-    // エラー時はダミーデータを返す
-    const dummyData = {
+    // エラーレスポンスを返す（ダミーデータなし）
+    const errorResponse = {
       success: false,
-      error: "MLサーバーに接続できません",
-      data: {
-        today: {
-          date: new Date().toISOString().split("T")[0],
-          day_of_week: "不明",
-          occupancy_rate: 0,
-          occupied_seats: 0,
-        },
-        tomorrow: {
-          date: new Date(Date.now() + 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-          day_of_week: "不明",
-          occupancy_rate: 0,
-          occupied_seats: 0,
-        },
-      },
+      error:
+        error instanceof Error ? error.message : "MLサーバーに接続できません",
+      data: null,
     };
 
-    return NextResponse.json(dummyData, {
+    return NextResponse.json(errorResponse, {
       status: 503,
       headers: setCorsHeaders(),
     });

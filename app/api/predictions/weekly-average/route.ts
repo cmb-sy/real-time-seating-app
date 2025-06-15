@@ -38,22 +38,15 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("週間平均データ取得エラー:", error);
 
-    // エラー時はダミーデータを返す
-    const weekdays = ["日曜", "月曜", "火曜", "水曜", "木曜", "金曜", "土曜"];
-    const dummyData = {
+    // エラーレスポンスを返す（ダミーデータなし）
+    const errorResponse = {
       success: false,
-      error: "MLサーバーに接続できません",
-      data: {
-        weekly_averages: weekdays.map((day, index) => ({
-          weekday: index,
-          weekday_name: day,
-          occupancy_rate: 0,
-          occupied_seats: 0,
-        })),
-      },
+      error:
+        error instanceof Error ? error.message : "MLサーバーに接続できません",
+      data: null,
     };
 
-    return NextResponse.json(dummyData, {
+    return NextResponse.json(errorResponse, {
       status: 503,
       headers: setCorsHeaders(),
     });
