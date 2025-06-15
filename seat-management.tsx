@@ -10,10 +10,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User, UserX, LayoutDashboard } from "lucide-react";
+import { User, UserX, Users } from "lucide-react";
 import { useSeats } from "@/hooks/use-seats";
 import { useConfetti } from "@/hooks/use-confetti";
-import { NavMenu } from "@/components/nav-menu";
 
 interface Seat {
   id: number;
@@ -133,50 +132,38 @@ export default function SeatManagement() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen p-4 bg-white">
-      {/* 上部エリア: 左右に分かれたヘッダー */}
-      <div className="flex justify-between items-center mb-8">
-        {/* 左上：日付と社内人口密度率 */}
-        <div>
-          {/* 日付表示 */}
-          <div className="mb-3">
-            <div className="text-sm font-medium text-gray-700">
-              {new Date().toLocaleDateString("ja-JP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </div>
-          </div>
-
-          {/* 社内人口密度率 */}
-          <div className="flex items-center">
-            <span className="text-sm font-medium mr-2 text-gray-700">
-              社内人口密度率:
-            </span>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              value={densityValue}
-              onChange={(e) => updateDensity(Number(e.target.value))}
-              className="w-16 text-center text-sm"
-            />
-            <span className="text-sm ml-1 text-gray-700">%</span>
-          </div>
+    <div className="min-h-screen bg-white flex flex-col relative">
+      {/* 人口密度率表示 - 左上に固定配置 */}
+      <div className="absolute top-20 left-10 z-10">
+        <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm">
+          社内人口密度率：
+          <select
+            value={densityValue}
+            onChange={(e) => updateDensity(Number(e.target.value))}
+            className="text-sm font-medium bg-transparent border-none outline-none text-slate-700 cursor-pointer rounded-lg px-3 py-2 shadow-md border border-gray-200"
+          >
+            <option value={0}>0%</option>
+            <option value={10}>10%</option>
+            <option value={20}>20%</option>
+            <option value={30}>30%</option>
+            <option value={40}>40%</option>
+            <option value={50}>50%</option>
+            <option value={60}>60%</option>
+            <option value={70}>70%</option>
+            <option value={80}>80%</option>
+            <option value={90}>90%</option>
+            <option value={100}>100%</option>
+          </select>
         </div>
-
-        {/* 右上：スペース確保（メニューはrootレイアウトに移動済み） */}
-        <div></div>
       </div>
 
-      {/* 中央エリア: 座席レイアウト - 縦横中央に配置 */}
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+      {/* 中央エリア: 座席レイアウト - 完全に中央に配置 */}
+      <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-5xl bg-gray-50 p-8 rounded-xl border border-gray-200 shadow-sm">
           {/* 4×2のグリッドレイアウト - 席を大きく */}
           <div className="grid grid-cols-4 grid-rows-2 gap-10 mx-auto">
             {seats.map((seat) => (
-              <div key={seat.id} className="relative">
+              <div key={seat.id} className="relative h-40">
                 {!seat.is_occupied && editingSeat === seat.id ? (
                   <Input
                     value={inputName}
@@ -184,7 +171,7 @@ export default function SeatManagement() {
                     onKeyDown={(e) => handleKeyPress(e, seat.id)}
                     onBlur={() => handleNameConfirm(seat.id)}
                     placeholder="名前"
-                    className="h-40 text-center text-xl"
+                    className="h-40 w-full text-center text-xl border border-gray-300 rounded-lg shadow-sm"
                     autoFocus
                   />
                 ) : (
@@ -257,7 +244,11 @@ export default function SeatManagement() {
 
       {/* 退席確認ダイアログ */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent aria-describedby="seat-operation-description">
+        <DialogContent
+          aria-describedby="seat-operation-description"
+          className="sm:max-w-md"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>座席の操作</DialogTitle>
             <DialogDescription id="seat-operation-description">

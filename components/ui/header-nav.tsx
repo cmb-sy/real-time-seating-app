@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,10 +15,11 @@ import {
 
 // メニュー項目を定数として定義
 const MENU_ITEMS = [
-  { href: "/", label: "座席表示" },
-  { href: "/analytics", label: "統計分析" },
-  { href: "/contact", label: "お問い合わせ" },
-  { href: "/about", label: "サービス情報" },
+  { href: "/", label: "座席表示", icon: "🪑" },
+  { href: "/analytics", label: "統計分析", icon: "📊" },
+  { href: "/about", label: "サービス情報", icon: "ℹ️" },
+  { href: "/thank-you", label: "ありがとう", icon: "🙏" },
+  { href: "/contact", label: "お問い合わせ", icon: "📧" },
 ];
 
 type ApiStatus = {
@@ -49,27 +50,33 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
 
     const { isConnected, isLocal, toggleEndpoint } = apiStatus;
 
-    let statusIcon = "🔴";
+    let statusColor = "text-red-500";
     let statusText = "接続失敗";
 
     if (isConnected) {
-      statusIcon = isLocal ? "🟢" : "🔵";
-      statusText = isLocal ? "ローカル接続" : "本番接続";
+      statusColor = isLocal ? "text-green-500" : "text-blue-500";
+      statusText = isLocal ? "ローカル" : "本番";
     }
 
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-600">
-          {statusIcon} {statusText}
+        <div
+          className={`w-2 h-2 rounded-full ${statusColor.replace(
+            "text-",
+            "bg-"
+          )}`}
+        />
+        <span className={`text-xs font-medium ${statusColor}`}>
+          {statusText}
         </span>
         {toggleEndpoint && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={toggleEndpoint}
-            className="text-xs h-6 px-2 text-gray-600 border-gray-300 hover:bg-gray-50"
+            className="text-xs h-6 px-2 hover:bg-gray-100"
           >
-            {isLocal ? "本番" : "ローカル"}
+            切替
           </Button>
         )}
       </div>
@@ -77,85 +84,117 @@ export function HeaderNav({ apiStatus }: HeaderNavProps) {
   };
 
   return (
-    <header className="w-full bg-white shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-gray-100">
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-        {/* ロゴ */}
-        <Link
-          href="/"
-          className="font-semibold text-lg text-gray-800 hover:text-gray-600 transition-colors"
-        >
-          座席管理システム
-        </Link>
-
-        {/* PC用ナビゲーション */}
-        <nav className="hidden md:flex items-center space-x-4">
-          {MENU_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`text-sm font-medium px-3 py-1.5 rounded-md transition-all duration-200 ${
-                isActive(item.href)
-                  ? "bg-blue-50 text-blue-700 font-semibold"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {/* API接続ステータス */}
-          <div className="ml-3 pl-3 border-l border-gray-200">
-            {renderApiStatus()}
-          </div>
-        </nav>
-
-        {/* モバイル用ハンバーガーメニュー */}
-        <div className="md:hidden">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full hover:bg-gray-100"
-              >
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">メニューを開く</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <SheetHeader className="mb-6">
-                <SheetTitle>メニュー</SheetTitle>
-              </SheetHeader>
-              <nav className="space-y-2">
-                {MENU_ITEMS.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={handleClose}
-                    className="block"
-                  >
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-left ${
-                        isActive(item.href) ? "bg-accent" : ""
-                      }`}
-                      size="lg"
-                    >
-                      {item.label}
-                    </Button>
-                  </Link>
-                ))}
-              </nav>
-              {/* モバイル用API接続ステータス */}
-              <div className="mt-6 px-4">{renderApiStatus()}</div>
-              <div className="absolute bottom-4 left-6 right-6">
-                <div className="text-xs text-gray-500 text-center">
-                  © 2025 座席管理システム v1.0
+    <>
+      {/* メインヘッダー */}
+      <header className="w-full bg-gradient-to-r from-slate-50 to-blue-50 shadow-lg fixed top-0 left-0 right-0 z-50 border-b border-slate-200/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* 左側: ブランドロゴ */}
+            <div className="flex items-center space-x-3">
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold text-slate-800">
+                  座席管理システム
+                </h1>
+                <div className="flex items-center text-xs text-slate-500 mt-0.5">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  {new Date().toLocaleDateString("ja-JP", {
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </div>
               </div>
-            </SheetContent>
-          </Sheet>
+            </div>
+
+            {/* 中央: メインナビゲーション（PC用） */}
+            <nav className="hidden lg:flex items-center space-x-1">
+              {MENU_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                    isActive(item.href)
+                      ? "bg-white text-blue-600 shadow-md ring-1 ring-blue-100"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
+                >
+                  <span className="text-sm">{item.icon}</span>
+                  <span className="text-sm whitespace-nowrap">
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+
+            {/* 右側: ユーティリティ */}
+            <div className="flex items-center space-x-3">
+              {/* API接続ステータス */}
+              <div className="hidden lg:block">{renderApiStatus()}</div>
+
+              {/* モバイル用ハンバーガーメニュー */}
+              <div className="lg:hidden">
+                <Sheet open={open} onOpenChange={setOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-xl hover:bg-white/60"
+                    >
+                      <Menu className="h-5 w-5" />
+                      <span className="sr-only">メニューを開く</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="right"
+                    className="w-80 bg-gradient-to-b from-slate-50 to-white"
+                  >
+                    <SheetHeader className="mb-8">
+                      <SheetTitle className="text-left text-xl font-bold text-slate-800">
+                        メニュー
+                      </SheetTitle>
+                    </SheetHeader>
+
+                    {/* モバイル用ナビゲーション */}
+                    <nav className="space-y-2">
+                      {MENU_ITEMS.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={handleClose}
+                          className="block"
+                        >
+                          <div
+                            className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                              isActive(item.href)
+                                ? "bg-blue-50 text-blue-600 border border-blue-100"
+                                : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="text-lg">{item.icon}</span>
+                            <span className="font-medium">{item.label}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </nav>
+
+                    {/* モバイル用API接続ステータス */}
+                    <div className="mt-6 p-4 bg-white rounded-xl border border-slate-200">
+                      {renderApiStatus()}
+                    </div>
+
+                    {/* フッター */}
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="text-xs text-slate-400 text-center">
+                        © 2025 座席管理システム v2.0
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      <div className="h-8" />
+    </>
   );
 }

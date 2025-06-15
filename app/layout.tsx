@@ -23,7 +23,7 @@ export default function RootLayout({
         <AuthProvider>
           <div className="relative min-h-screen">
             <HeaderNav />
-            <main className="pt-16">{children}</main>
+            <main>{children}</main>
           </div>
         </AuthProvider>
       </body>

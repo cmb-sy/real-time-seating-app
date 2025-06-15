@@ -401,7 +401,7 @@ export default function AnalyticsPage() {
         </div>
       )}
       {/* メインコンテンツ */}
-      <div className="pt-4 pb-12">
+      <div className="pt-8 pb-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* ページタイトル */}
           <div className="mb-8">
@@ -430,14 +430,16 @@ export default function AnalyticsPage() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center">
-                    <div className="text-sm text-gray-500 mb-2">使用席数</div>
+                    <div className="text-sm text-gray-500 mb-2">占有席数</div>
                     <div className="text-5xl font-bold text-black">
                       {todayPrediction?.occupied_seats ?? "-"}
                       <span className="text-xl text-gray-400">席</span>
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-sm text-gray-500 mb-2">占有率</div>
+                    <div className="text-sm text-gray-500 mb-2">
+                      社内人口密度率
+                    </div>
                     <div className="text-5xl font-bold text-black">
                       {todayPrediction?.occupancy_rate !== undefined
                         ? (todayPrediction.occupancy_rate * 100).toFixed(1)
@@ -464,7 +466,7 @@ export default function AnalyticsPage() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center">
-                    <div className="text-sm text-gray-500 mb-2">使用席数</div>
+                    <div className="text-sm text-gray-500 mb-2">占有席数</div>
                     <div className="text-5xl font-bold text-black">
                       {tomorrowPrediction?.occupied_seats ?? "-"}
                       <span className="text-xl text-gray-400">席</span>
@@ -476,7 +478,9 @@ export default function AnalyticsPage() {
                     )}
                   </div>
                   <div className="text-center">
-                    <div className="text-sm text-gray-500 mb-2">占有率</div>
+                    <div className="text-sm text-gray-500 mb-2">
+                      社内人口密度率
+                    </div>
                     <div className="text-5xl font-bold text-black">
                       {tomorrowPrediction?.occupancy_rate !== undefined
                         ? (tomorrowPrediction.occupancy_rate * 100).toFixed(1)
@@ -503,7 +507,7 @@ export default function AnalyticsPage() {
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Activity className="h-6 w-6 text-blue-600" />
                   </div>
-                  使用席数の週間平均
+                  占有席数の週間平均
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">

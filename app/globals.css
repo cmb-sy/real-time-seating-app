@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* スクロールバーを常に表示してレイアウトシフトを防ぐ */
+html {
+  overflow-y: scroll;
+}
+
+/* ダイアログのオーバーレイでスクロールを無効化する際のレイアウトシフトを防ぐ */
+body {
+  scrollbar-gutter: stable;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
