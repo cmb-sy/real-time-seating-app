@@ -19,7 +19,6 @@ const MENU_ITEMS = [
   { href: "/", label: "座席表示", icon: "🪑" },
   { href: "/analytics", label: "統計分析", icon: "📊" },
   { href: "/about", label: "サービス情報", icon: "ℹ️" },
-  { href: "/thank-you", label: "ありがとう", icon: "🙏" },
   { href: "/contact", label: "お問い合わせ", icon: "📧" },
 ];
 

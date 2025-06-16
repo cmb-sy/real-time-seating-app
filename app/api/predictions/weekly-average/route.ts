@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
         // CORSエラーを回避するため、サーバーサイドでフェッチ
       }
     );
-
     if (!response.ok) {
       // MLサーバーからのエラーレスポンスを取得
       let errorMessage = `MLサーバーエラー: ${response.status}`;
@@ -36,10 +35,8 @@ export async function GET(request: NextRequest) {
         // JSONパースエラーの場合はステータスコードのみ
         console.error("MLサーバーエラーレスポンスの解析に失敗:", parseError);
       }
-
       throw new Error(errorMessage);
     }
-
     const data = await response.json();
 
     // 成功レスポンスの場合

@@ -327,27 +327,16 @@ function AnalyticsPageComponent() {
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center space-y-6 p-8 rounded-2xl bg-white shadow-xl border border-gray-200 max-w-lg">
             <h1 className="text-4xl font-bold text-gray-800">
-              サーバーエラー🔌
+              メンテナンス中🙇
             </h1>
             <p className="text-gray-600">
-              MLサーバーでデータベース接続エラーが発生しています
+              現在システムはメンテナンス中です。しばらくお待ちください。
             </p>
-            {errorDetails && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-700">{errorDetails}</p>
-              </div>
-            )}
             <div className="flex gap-4 justify-center">
-              <Button
-                onClick={fetchAllData}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
-              >
-                再接続を試行
-              </Button>
               <Button
                 onClick={() => (window.location.href = "/")}
                 variant="outline"
-                className="font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
+                className="font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-300 hover:bg-gray-100"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 座席画面に戻る

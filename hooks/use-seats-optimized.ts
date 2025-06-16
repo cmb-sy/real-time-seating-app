@@ -9,8 +9,6 @@ interface Seat {
 }
 
 export function useSeatsOptimized() {
-  // 座席を固定配列として初期化（1-8の順序を絶対に保持）
-  // ハイドレーションエラーを防ぐため、初期化時は時刻を空文字に
   const [seats, setSeats] = useState<Seat[]>(() =>
     Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,

@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft,
   Monitor,
   Users,
   Clock,
@@ -34,17 +32,17 @@ export default function AboutPage() {
                 座席ミエールシステム
               </h1>
               <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                未来のオフィス体験を、今ここに。AIと統計分析で実現する、スマートな座席管理ソリューション
+                オフィスの席の空き状況がひと目でわかる。出社前に席を確認できるから安心です
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 text-sm font-medium">
                   🚀 リアルタイム監視
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 text-sm font-medium">
-                  📊 AI予測分析
+                  📊 使用傾向がわかる
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 text-sm font-medium">
-                  ⚡ 自動データ連携
+                  ⚡ 自動でデータ保存
                 </div>
               </div>
             </div>
@@ -56,10 +54,10 @@ export default function AboutPage() {
           <div className="mb-20">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                革新的な機能
+                主な機能
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                最新のテクノロジーを活用した、次世代の座席管理システム
+                席探しの悩みを解決する、シンプルで使いやすいシステム
               </p>
             </div>
 
@@ -73,10 +71,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        リアルタイム席監視
+                        今の席の状況がわかる
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        オフィスの座席状況をリアルタイムで監視し、どの席が使用中で、どの席が空いているかを一目で確認できます。
+                        今使われている席と空いている席が一目でわかります。わざわざオフィスを歩き回って席を探す必要がありません。
                       </p>
                     </div>
                   </div>
@@ -89,10 +87,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        スマート空席確認
+                        出社前に空席確認
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        出社前や席を探している時に、空いている席を事前に確認できるため、効率的に作業場所を見つけることができます。
+                        家にいる時や通勤中に、オフィスの席の空き状況を確認できます。席があるかわからずに出社する不安がなくなります。
                       </p>
                     </div>
                   </div>
@@ -105,10 +103,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        人口密度率の測定
+                        オフィスの混雑状況
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        社内の人口密度率をリアルタイムで計測し、オフィスの混雑状況を数値化して把握できます。
+                        今オフィスにどのくらい人がいるかがわかります。混雑している時間帯や空いている時間帯が把握できます。
                       </p>
                     </div>
                   </div>
@@ -121,10 +119,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        自動化されたデータ収集
+                        データは自動で保存
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        席情報と社内人口密度率の両方に更新があった場合、17:00にデータベースに自動連携する機能だけでなく、隔週で最新データを学習しモデルを更新します。
+                        席の情報と人数の情報が更新されたら、夕方5時に自動でデータベースに保存されます。2週間ごとにデータを見直して、予測の精度を上げています。
                       </p>
                     </div>
                   </div>
@@ -140,10 +138,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        座席不足の解消
+                        席がない問題を解決
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        出社しても席がない問題を解決。事前に座席状況を把握することで、安心して出社することができます。
+                        出社したのに座る席がない...そんな困った状況を防げます。事前に席の状況がわかるので、安心して出社できます。
                       </p>
                     </div>
                   </div>
@@ -156,10 +154,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        時間の無駄を削減
+                        席探しの時間を短縮
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        席探しに費やす時間を削減し、より生産的な業務に集中できる環境を提供します。
+                        席を探してウロウロする時間がなくなります。その分、仕事に集中できる時間が増えます。
                       </p>
                     </div>
                   </div>
@@ -172,10 +170,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        お問い合わせ機能
+                        要望・お問い合わせ
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        お問い合わせフォームを設置し、お客様からのご意見やご要望を受け付け、どんどん性能を向上させていきます。
+                        使ってみて気づいたことや改善してほしい点があれば、お気軽にお知らせください。できる範囲で対応していきます。
                       </p>
                     </div>
                   </div>
@@ -188,10 +186,10 @@ export default function AboutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        予測・統計分析
+                        使用パターンの分析
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
-                        収集されたデータを基に混雑予測や使用傾向の分析を行い、より効果的なオフィス運用をサポートします。
+                        蓄積されたデータから、いつ頃混雑するかや席の使われ方の傾向を分析して、より使いやすいオフィスづくりに活用しています。
                       </p>
                     </div>
                   </div>
@@ -205,13 +203,11 @@ export default function AboutPage() {
             <div className="text-center mb-16">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Heart className="h-8 w-8 text-red-500" />
-                <h2 className="text-4xl font-bold text-gray-900">
-                  ユーザーの声
-                </h2>
+                <h2 className="text-4xl font-bold text-gray-900">利用者の声</h2>
                 <Heart className="h-8 w-8 text-red-500" />
               </div>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                実際にご利用いただいているユーザー様からの貴重なフィードバック
+                実際に使ってくださっている方からいただいた感想
               </p>
             </div>
 
@@ -251,7 +247,7 @@ export default function AboutPage() {
                       </span>
                     </div>
                     <p className="text-blue-700 text-sm">
-                      素晴らしいご提案ありがとうございます！プルダウン形式での席選択機能と、AIによる席候補の自動提案機能について、時間があるときに対応を検討させていただきます。
+                      いいアイデアですね！プルダウンで席を選べるようにするのと、よく使う席を候補として出すのは確かに便利そうです。時間を見つけて対応してみます。
                     </p>
                   </div>
                 </div>
@@ -292,7 +288,7 @@ export default function AboutPage() {
                       </span>
                     </div>
                     <p className="text-green-700 text-sm">
-                      とても面白いアイデアですね！社内コミュニケーション機能として、ホーム画面にTwitterライクな投稿スペースについて、時間があるときに対応を検討させていただきます。
+                      面白いですね！ホーム画面に社内の小ネタを投稿できるスペースがあったら盛り上がりそうです。ちょっと余裕ができたら検討してみます。
                     </p>
                   </div>
                 </div>
@@ -309,60 +305,95 @@ export default function AboutPage() {
                   <div className="bg-white/20 rounded-xl p-3">
                     <Database className="h-10 w-10 text-white" />
                   </div>
-                  <h2 className="text-4xl font-bold">
-                    データ連携・分析システム
-                  </h2>
+                  <h2 className="text-4xl font-bold">データの管理と分析</h2>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                     <h3 className="font-bold text-xl mb-4 flex items-center gap-3">
                       <Clock className="h-6 w-6" />
-                      17:00 自動データ連携
+                      夕方5時に自動保存
                     </h3>
                     <p className="text-white/90 leading-relaxed">
-                      座席の更新情報と社内人口密度率の両方に更新があった場合、17:00にデータベースに自動連携します。この条件付きデータ収集により、効率的で意味のある分析が可能になります。
+                      席の情報と人数の情報が両方とも更新されていたら、夕方5時にデータベースに自動で保存します。必要な時だけ保存するので、効率的にデータを管理できます。
                     </p>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                     <h3 className="font-bold text-xl mb-4 flex items-center gap-3">
                       <TrendingUp className="h-6 w-6" />
-                      予測・統計分析
+                      使用パターンの分析
                     </h3>
                     <p className="text-white/90 leading-relaxed">
-                      収集されたデータは高度な統計分析に活用され、混雑パターンの予測や最適な座席配置の提案に役立てられます。
+                      集めたデータから、いつ頃混雑するかや席の使われ方の傾向を分析して、オフィスの使い方を改善するヒントを見つけています。
                     </p>
                   </div>
                 </div>
 
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-l-4 border-white/50">
-                  <h4 className="font-bold text-xl mb-4">活用データ</h4>
+                  <h4 className="font-bold text-xl mb-4">分析に使うデータ</h4>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                       <span className="text-white/90">
-                        座席使用状況の時系列データ
+                        時間ごとの席の使用状況
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                       <span className="text-white/90">
-                        社内人口密度率の変動パターン
+                        オフィスの人数の変化
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                       <span className="text-white/90">
-                        曜日・時間帯別の利用傾向
+                        曜日・時間帯ごとの使われ方
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                       <span className="text-white/90">
-                        空席予測アルゴリズムの学習データ
+                        空席予測のためのデータ
                       </span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 感謝メッセージセクション */}
+          <div className="mb-20">
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-3xl p-12 shadow-lg border border-amber-100 relative overflow-hidden">
+              <div className="absolute top-4 right-4 opacity-10">
+                <Heart className="h-32 w-32 text-amber-500" />
+              </div>
+              <div className="relative">
+                <div className="text-center mb-8">
+                  <h2 className="text-4xl font-bold text-amber-800 mb-4">
+                    いつもありがとうございます
+                  </h2>
+                  <p className="text-xl text-amber-700 max-w-3xl mx-auto">
+                    忙しい中、席の情報を入力していただき本当にありがとうございます。
+                    <br />
+                    皆さんのおかげで、みんなが使いやすいオフィスに近づいています。
+                  </p>
+                </div>
+
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-amber-200 max-w-3xl mx-auto">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-full p-2">
+                      <CheckCircle className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-xl text-amber-800">
+                      データ入力で未来が変わります
+                    </h3>
+                  </div>
+                  <p className="text-amber-700 leading-relaxed">
+                    毎日の席の情報入力は、ただの記録じゃありません。このデータを分析することで、
+                    将来の席の配置を良くしたり、混雑予測の精度を上げたりできるんです。
+                    小さな作業ですが、みんなが快適に働けるオフィスづくりの大切な一歩になっています。
+                  </p>
                 </div>
               </div>
             </div>
@@ -373,12 +404,12 @@ export default function AboutPage() {
             <div className="text-center">
               <MessageSquare className="h-16 w-16 text-blue-600 mx-auto mb-6" />
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                あなたの声をお聞かせください
+                感想や要望をお聞かせください
               </h2>
               <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                いただいたユーザーの声については、本当に時間があるときに対応させていただきます。
+                使ってみての感想や「こうだったらいいな」という要望があれば、ぜひ教えてください。
                 <br />
-                ご要望やフィードバックがございましたら、開発チームまでお気軽にお知らせください。
+                時間があるときに、できる範囲で対応させていただきます。
               </p>
               <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
                 フィードバックを送る
