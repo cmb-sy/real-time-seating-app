@@ -56,9 +56,6 @@ export default function AboutPage() {
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
                 主な機能
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                席探しの悩みを解決する、シンプルで使いやすいシステム
-              </p>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
@@ -202,13 +199,8 @@ export default function AboutPage() {
           <div className="mb-20">
             <div className="text-center mb-16">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <Heart className="h-8 w-8 text-red-500" />
                 <h2 className="text-4xl font-bold text-gray-900">利用者の声</h2>
-                <Heart className="h-8 w-8 text-red-500" />
               </div>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                実際に使ってくださっている方からいただいた感想
-              </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -391,8 +383,7 @@ export default function AboutPage() {
                   </div>
                   <p className="text-amber-700 leading-relaxed">
                     毎日の席の情報入力は、ただの記録じゃありません。このデータを分析することで、
-                    将来の席の配置を良くしたり、混雑予測の精度を上げたりできるんです。
-                    小さな作業ですが、みんなが快適に働けるオフィスづくりの大切な一歩になっています。
+                    混雑予測の精度を上げることができるのです。
                   </p>
                 </div>
               </div>
