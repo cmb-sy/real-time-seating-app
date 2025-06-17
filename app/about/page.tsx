@@ -247,7 +247,7 @@ export default function AboutPage() {
                       </span>
                     </div>
                     <p className="text-blue-700 text-sm">
-                      いいアイデアですね！プルダウンで席を選べるようにするのと、よく使う席を候補として出すのは確かに便利そうです。時間を見つけて対応してみます。
+                      プルダウンだと候補がでる。だからこそ、候補を出してほしいということですね。時間あればやります。
                     </p>
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export default function AboutPage() {
                       </span>
                     </div>
                     <p className="text-green-700 text-sm">
-                      面白いですね！ホーム画面に社内の小ネタを投稿できるスペースがあったら盛り上がりそうです。ちょっと余裕ができたら検討してみます。
+                      検討に検討を重ね、検討を加速させていきます。
                     </p>
                   </div>
                 </div>
