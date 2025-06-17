@@ -8,6 +8,18 @@ export function DensitySelector() {
   const [isDensitySelectOpen, setIsDensitySelectOpen] = useState(false);
   const { densityValue, updateDensity } = useSeatsOptimized();
 
+  // 選択可能な値のリスト
+  const availableValues = Array.from({ length: 11 }, (_, i) => i * 10);
+
+  // 表示用の値 - 最も近い選択可能な値を使用
+  const displayValue = availableValues.reduce(
+    (closest, current) =>
+      Math.abs(current - densityValue) < Math.abs(closest - densityValue)
+        ? current
+        : closest,
+    availableValues[0]
+  );
+
   // 背景クリックで閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -38,7 +50,7 @@ export function DensitySelector() {
               社内人口密度率
             </div>
             <div className="text-sm font-bold text-gray-800">
-              {densityValue}%
+              {displayValue}%
             </div>
           </div>
           <div
@@ -66,7 +78,7 @@ export function DensitySelector() {
       {/* ドロップダウンリスト */}
       {isDensitySelectOpen && (
         <div className="absolute top-full mt-2 right-0 bg-white/90 backdrop-blur-xl rounded-xl shadow-xl border border-white/20 py-2 min-w-[180px] max-h-64 overflow-y-auto z-50">
-          {Array.from({ length: 11 }, (_, i) => i * 10).map((value) => (
+          {availableValues.map((value) => (
             <button
               key={value}
               onClick={() => {
@@ -76,14 +88,14 @@ export function DensitySelector() {
               className={`
                 w-full px-3 py-2 text-left transition-all duration-200 flex items-center justify-between hover:bg-blue-50
                 ${
-                  densityValue === value
+                  displayValue === value
                     ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
                     : "text-gray-700"
                 }
               `}
             >
               <span className="font-medium text-sm">{value}%</span>
-              {densityValue === value && (
+              {displayValue === value && (
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               )}
             </button>

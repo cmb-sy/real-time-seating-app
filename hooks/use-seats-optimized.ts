@@ -167,7 +167,7 @@ export function useSeatsOptimized() {
 
   // 密度更新
   const updateDensity = useCallback(async (value: number) => {
-    const newValue = Math.max(0, Math.min(100, value));
+    const newValue = Math.round(Math.max(0, Math.min(100, value)));
     try {
       const { error } = await supabaseAdmin
         .from("settings")
