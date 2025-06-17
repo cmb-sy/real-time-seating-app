@@ -216,7 +216,7 @@ export default function AboutPage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900 text-lg">
-                        諸刃の剣をより頂いた
+                        諸刃の剣
                       </h3>
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
