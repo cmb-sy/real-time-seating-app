@@ -2,8 +2,7 @@ name: Record Density Scheduler
 
 on:
   schedule:
-    # 毎時間実行（密度データを記録）
-    - cron: "0 * * * *"
+    - cron: "0 8 * * *"
   # 手動実行用のトリガー
   workflow_dispatch:
 
