@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Monitor,
   Users,
@@ -402,9 +403,11 @@ export default function AboutPage() {
                 <br />
                 時間があるときに、できる範囲で対応させていただきます。
               </p>
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-                フィードバックを送る
-              </Button>
+              <Link href="/contact">
+                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                  フィードバックを送る
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
