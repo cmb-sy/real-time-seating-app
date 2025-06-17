@@ -33,7 +33,7 @@ export default function AboutPage() {
                 座席ミエール
               </h1>
               <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                オフィスの席の空き状況がひと目でわかる。出社前に席を確認できるから安心です
+                このページはページは生成AIを使って生成しました。
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 text-sm font-medium">
