@@ -40,7 +40,7 @@ interface WeeklyAverageResponse {
   details?: string;
 }
 
-// AnalyticsPageコンポーネントをクライアントサイドでのみレンダリング
+// AnalyticsPageコンポーネントをクライアントサイドでのみレンダリング - パフォーマンス最適化
 function AnalyticsPageComponent() {
   const [todayPrediction, setTodayPrediction] =
     useState<TodayTomorrowPrediction | null>(null);
@@ -251,7 +251,7 @@ function AnalyticsPageComponent() {
     }
   };
 
-  // 全データを取得する統合関数
+  // 全データを取得する統合関数 - エラーハンドリング強化
   const fetchAllData = async () => {
     setIsLoading(true);
 
@@ -259,13 +259,23 @@ function AnalyticsPageComponent() {
       const baseUrl = await initializeApiConnection();
 
       if (baseUrl === null) {
-        throw new Error("利用可能なAPIサーバーがありません");
+        console.warn(
+          "⚠️ 利用可能なAPIサーバーがありません - 統計機能は利用できません"
+        );
+        setApiStatus("接続失敗");
+        setIsConnected(false);
+        return; // 処理を停止してループを防ぐ
       }
 
-      // 並列でデータを取得
-      await Promise.all([
-        fetchTodayTomorrowPredictions(baseUrl!),
-        fetchWeeklyAverages(baseUrl!),
+      // 並列でデータを取得（タイムアウト付き）
+      await Promise.race([
+        Promise.all([
+          fetchTodayTomorrowPredictions(baseUrl!),
+          fetchWeeklyAverages(baseUrl!),
+        ]),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("タイムアウト")), 10000)
+        ),
       ]);
 
       setLastUpdated(new Date());
@@ -273,49 +283,18 @@ function AnalyticsPageComponent() {
       console.error("データ取得処理でエラーが発生しました:", error);
       setApiStatus("エラー");
       setIsConnected(false);
+      // エラー時は無限ループを防ぐために処理を停止
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 手動でデータを再取得する関数（エンドポイント切り替えは削除）
-  const refreshData = async () => {
-    if (currentBaseUrl === null) {
-      console.error("ベースURLが設定されていません");
-      return;
-    }
+  // 静的データのため手動更新機能は削除
 
-    setApiStatus("更新中");
-
-    try {
-      await Promise.all([
-        fetchTodayTomorrowPredictions(currentBaseUrl!),
-        fetchWeeklyAverages(currentBaseUrl!),
-      ]);
-      if (isLocalApi) {
-        setApiStatus("ローカル接続");
-      } else {
-        setApiStatus("本番接続");
-      }
-      setIsConnected(true);
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error("データ更新でエラー:", error);
-      setApiStatus("エラー");
-      setIsConnected(false);
-    }
-  };
-
-  // 初期化とデータ更新の設定
+  // 初期化設定 - 静的データのため1回のみ読み込み
   useEffect(() => {
     fetchAllData();
-
-    // 5分ごとにデータを更新
-    const interval = setInterval(() => {
-      fetchAllData();
-    }, 300000);
-
-    return () => clearInterval(interval);
+    // 静的JSONデータのため、定期更新は不要
   }, []);
 
   // グラフ用データ整形
@@ -341,7 +320,7 @@ function AnalyticsPageComponent() {
           apiStatus={{
             isConnected: false,
             isLocal: isLocalApi,
-            toggleEndpoint: refreshData,
+            toggleEndpoint: () => {}, // 静的データのため更新機能は無効
           }}
         />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -375,7 +354,7 @@ function AnalyticsPageComponent() {
         apiStatus={{
           isConnected,
           isLocal: isLocalApi,
-          toggleEndpoint: refreshData,
+          toggleEndpoint: () => {}, // 静的データのため更新機能は無効
         }}
       />
       {/* ローディング表示 */}

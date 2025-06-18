@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ML_BACKEND_URL = "http://localhost:8000";
+// 環境に応じたMLバックエンドURL
+const ML_BACKEND_URL =
+  process.env.NODE_ENV === "production"
+    ? process.env.ML_BACKEND_URL ||
+      "https://real-time-seating-app-ml.vercel.app"
+    : "http://localhost:8000";
 
 // CORSヘッダーを設定する関数
 const setCorsHeaders = () => ({
@@ -62,14 +67,16 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("週間予測データ取得エラー:", error);
 
-    // エラーレスポンスを返す（ダミーデータなし）
+    // 環境に関係なく常にエラーレスポンスを返す
     const errorResponse = {
       success: false,
       error:
         error instanceof Error ? error.message : "MLサーバーに接続できません",
       data: null,
       details:
-        "MLサーバーでデータベース接続エラーが発生しています。管理者にお問い合わせください。",
+        process.env.NODE_ENV === "production"
+          ? "MLサーバーとの接続に失敗しました。しばらく時間をおいてから再度お試しください。"
+          : "開発環境: MLサーバー(localhost:8000)が起動していない可能性があります。",
     };
 
     return NextResponse.json(errorResponse, {
