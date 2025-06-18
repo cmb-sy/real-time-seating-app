@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import { User, UserX, Sparkles, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ const SeatButton = memo(
     // 編集モード
     if (!seat.is_occupied && isEditing) {
       return (
-        <div className="relative h-32 sm:h-40 lg:h-44 w-full">
+        <div className="relative aspect-[4/3] w-full">
           <div className="h-full w-full bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 rounded-2xl shadow-lg flex flex-col items-center justify-center p-4 relative overflow-hidden">
             {/* 背景装飾 */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-2xl" />
@@ -97,7 +97,7 @@ const SeatButton = memo(
 
     // 通常の座席表示 - レスポンシブ対応
     return (
-      <div className="relative h-32 sm:h-40 lg:h-44 w-full">
+      <div className="relative aspect-[4/3] w-full">
         <Button
           id={`seat-${seat.id}`}
           onClick={handleClick}
@@ -196,32 +196,35 @@ export const SeatGrid = memo(
   }: SeatGridProps) => {
     // 座席を完全に固定位置で配置（1-8の順序を絶対に保証）
     // 常に8個の座席を表示し、データがない場合はデフォルト値を使用
-    const fixedSeats = Array.from({ length: 8 }, (_, index) => {
-      const seatId = index + 1;
-      // seatsが8個未満の場合でも、インデックスベースで安全にアクセス
-      const seat = seats[index];
+    // useMemoでメモ化してパフォーマンス向上
+    const fixedSeats = useMemo(() => {
+      return Array.from({ length: 8 }, (_, index) => {
+        const seatId = index + 1;
+        // seatsが8個未満の場合でも、インデックスベースで安全にアクセス
+        const seat = seats[index];
 
-      // 座席データが存在し、IDが一致する場合はそのまま使用
-      if (seat && seat.id === seatId) {
-        return seat;
-      }
+        // 座席データが存在し、IDが一致する場合はそのまま使用
+        if (seat && seat.id === seatId) {
+          return seat;
+        }
 
-      // データがない場合やIDが一致しない場合はデフォルト値を返す
-      return {
-        id: seatId,
-        name: null,
-        is_occupied: false,
-        updated_date: undefined,
-      };
-    });
+        // データがない場合やIDが一致しない場合はデフォルト値を返す
+        return {
+          id: seatId,
+          name: null,
+          is_occupied: false,
+          updated_date: undefined,
+        };
+      });
+    }, [seats]);
 
     return (
       <div className="w-full flex flex-col items-center justify-center">
         {/* 座席グリッドコンテナ */}
-        <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-3xl shadow-xl border border-gray-200 w-full p-4 sm:p-6 lg:p-8 mx-auto">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-3xl shadow-xl border border-gray-200 w-full p-6 sm:p-8 lg:p-12 mx-auto">
           {/* 座席グリッド - レスポンシブレイアウト */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-            {fixedSeats.map((seat, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-10">
+            {fixedSeats.map((seat: Seat, index: number) => (
               <div
                 key={`seat-${seat.id}`} // シンプルで一意なキー
                 className="relative"

@@ -55,10 +55,11 @@ export default function SeatManagement() {
     [seats]
   );
 
-  // 名前確定処理
+  // 名前確定処理 - パフォーマンス最適化
   const handleNameConfirm = useCallback(
     async (seatId: number) => {
-      if (!inputName.trim()) {
+      const trimmedName = inputName.trim();
+      if (!trimmedName) {
         setEditingSeat(null);
         return;
       }
@@ -66,13 +67,20 @@ export default function SeatManagement() {
       const seat = seats.find((s) => s.id === seatId);
       if (!seat) return;
 
+      // 重複送信防止
+      if (seat.name === trimmedName && seat.is_occupied) {
+        setEditingSeat(null);
+        setInputName("");
+        return;
+      }
+
       try {
         if (seat.is_occupied || isDialogEditing) {
           // 名前の更新のみ
-          await updateName(seatId, inputName.trim());
+          await updateName(seatId, trimmedName);
         } else {
           // 新規着席
-          await occupySeat(seatId, inputName.trim());
+          await occupySeat(seatId, trimmedName);
           // 着席成功時にクラッカーアニメーション
           triggerConfetti(`seat-${seatId}`);
         }
@@ -170,12 +178,12 @@ export default function SeatManagement() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl" />
       </div>
 
-      {/* メインコンテンツ - レスポンシブ中央配置 */}
-      <div className="relative z-10 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+      {/* メインコンテンツ - 中央配置の改善 */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
+        <div className="w-full max-w-6xl">
           {/* 座席グリッド */}
           <div className="flex items-center justify-center">
-            <div className="w-full max-w-6xl">
+            <div className="w-full">
               <SeatGrid
                 seats={seats}
                 editingSeat={editingSeat}

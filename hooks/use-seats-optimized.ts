@@ -84,11 +84,11 @@ export function useSeatsOptimized() {
         return;
       }
 
-      // デバウンス処理
+      // デバウンス処理 - より高速化
       const now = Date.now();
       const lastUpdate = lastUpdateTime.current[seatId] || 0;
-      if (now - lastUpdate < 500) {
-        // 500ms以内の連続更新を防ぐ
+      if (now - lastUpdate < 200) {
+        // 200ms以内の連続更新を防ぐ（より高速化）
         console.log(`⏭️ 座席${seatId}の更新をデバウンスしました`);
         return;
       }
