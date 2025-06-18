@@ -56,6 +56,17 @@ export const checkApiAvailability = async () => {
 
   console.log("🔗 API接続の確認を開始...");
 
+  // 本番環境では同一ドメインAPIを使用（ローカルテストはスキップ）
+  if (config.isProduction) {
+    console.log("本番環境: 同一ドメインAPIエンドポイントを使用");
+    return {
+      isLocal: false,
+      isProduction: true,
+      activeEndpoint: "same-origin",
+      baseUrl: config.sameOriginApi,
+    };
+  }
+
   // 開発環境ではローカルバックエンドを優先的にテスト
   console.log("📡 ローカルバックエンド (localhost:8000) をテスト中...");
   const isLocalAvailable = await testApiConnection(config.localBackend, 3000);
@@ -85,7 +96,7 @@ export const checkApiAvailability = async () => {
         baseUrl: config.productionMLServer,
       };
     } else {
-      console.log("本番環境では同一ドメインAPIエンドポイントを使用");
+      console.log("開発環境: 同一ドメインAPIエンドポイントを使用");
       // 同一ドメインのAPIは常に利用可能として扱う
       return {
         isLocal: false,
