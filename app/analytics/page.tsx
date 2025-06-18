@@ -349,9 +349,7 @@ function AnalyticsPageComponent() {
             <h1 className="text-4xl font-bold text-gray-800">
               メンテナンス中🙇
             </h1>
-            <p className="text-gray-600">
-              現在システムはメンテナンス中です。しばらくお待ちください。
-            </p>
+            <p className="text-gray-600">しばらくお待ちください。</p>
             <div className="flex gap-4 justify-center">
               <Button
                 onClick={() => (window.location.href = "/")}

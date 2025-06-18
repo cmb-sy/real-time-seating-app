@@ -33,7 +33,7 @@ export default function AboutPage() {
                 座席ミエール
               </h1>
               <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                このページは生成AIを使って生成しました!
+                このページは、デザインや一部の文言に生成AIを使っています。
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 text-sm font-medium">
