@@ -34,7 +34,7 @@ export const testApiConnection = async (
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(`${url}/api/predictions/today-tomorrow`, {
+    const response = await fetch(`${url}/api/predictions/weekly`, {
       method: "GET",
       signal: controller.signal,
       headers: {

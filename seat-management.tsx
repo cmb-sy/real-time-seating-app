@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Sparkles, Zap } from "lucide-react";
 import { SeatGrid } from "@/components/seat-grid";
 import { SeatDialog } from "@/components/seat-dialog";
+import { TodayTomorrowPredictions } from "@/components/today-tomorrow-predictions";
 import { useSeatsOptimized } from "@/hooks/use-seats-optimized";
 import { useConfetti } from "@/hooks/use-confetti";
 
@@ -171,10 +172,15 @@ export default function SeatManagement() {
 
       {/* メインコンテンツ - レスポンシブ中央配置 */}
       <div className="relative z-10 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* 予測データ表示 */}
+          <div className="w-full">
+            <TodayTomorrowPredictions />
+          </div>
+
+          {/* 座席グリッド */}
+          <div className="flex items-center justify-center">
             <div className="w-full max-w-6xl">
-              {/* 座席グリッド */}
               <SeatGrid
                 seats={seats}
                 editingSeat={editingSeat}

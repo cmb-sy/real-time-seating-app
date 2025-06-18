@@ -24,16 +24,6 @@ interface TodayTomorrowPrediction {
   occupied_seats: number;
 }
 
-interface TodayTomorrowResponse {
-  success: boolean;
-  data: {
-    today: TodayTomorrowPrediction;
-    tomorrow: TodayTomorrowPrediction;
-  };
-  error?: string;
-  details?: string;
-}
-
 interface WeeklyAverageItem {
   weekday: number;
   weekday_name: string;
@@ -154,14 +144,14 @@ function AnalyticsPageComponent() {
     }
   };
 
-  // 今日・明日の予測データを取得
+  // 今日・明日の予測データを週間予測APIから取得
   const fetchTodayTomorrowPredictions = async (baseUrl: string | null) => {
     try {
       // baseUrlが空文字またはnullの場合は相対パスを使用
       const url = baseUrl
-        ? `${baseUrl}/api/predictions/today-tomorrow`
-        : "/api/predictions/today-tomorrow";
-      console.log(`📅 今日・明日の予測データを取得中: ${url}`);
+        ? `${baseUrl}/api/predictions/weekly`
+        : "/api/predictions/weekly";
+      console.log(`📅 週間予測データから今日・明日を取得中: ${url}`);
 
       const response = await safeFetch(url, 15000);
 
@@ -169,22 +159,52 @@ function AnalyticsPageComponent() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: TodayTomorrowResponse = await response.json();
-      console.log(`📅 今日・明日のAPIレスポンス:`, data);
+      const data = await response.json();
+      console.log(`📅 週間予測APIレスポンス:`, data);
 
       if (data.success && data.data) {
-        setTodayPrediction(data.data.today);
-        setTomorrowPrediction(data.data.tomorrow);
+        // 今日と明日の日付を計算
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
+        const todayDateString = today.toISOString().split("T")[0];
+        const tomorrowDateString = tomorrow.toISOString().split("T")[0];
+
+        // 週間データから今日と明日を抽出
+        let todayData = null;
+        let tomorrowData = null;
+
+        Object.values(data.data).forEach((dayData: any) => {
+          if (dayData.date === todayDateString) {
+            todayData = {
+              date: dayData.date,
+              day_of_week: dayData.weekday_name,
+              occupancy_rate: dayData.occupancy_rate,
+              occupied_seats: dayData.occupied_seats,
+            };
+          } else if (dayData.date === tomorrowDateString) {
+            tomorrowData = {
+              date: dayData.date,
+              day_of_week: dayData.weekday_name,
+              occupancy_rate: dayData.occupancy_rate,
+              occupied_seats: dayData.occupied_seats,
+            };
+          }
+        });
+
+        setTodayPrediction(todayData);
+        setTomorrowPrediction(tomorrowData);
         console.log(`✅ 今日・明日の予測データを取得しました`);
         setErrorDetails(null);
       } else {
-        console.error("今日・明日予測データの取得失敗:", data.error);
+        console.error("週間予測データの取得失敗:", data.error);
         setTodayPrediction(null);
         setTomorrowPrediction(null);
         setErrorDetails(data.details || data.error || null);
       }
     } catch (error) {
-      console.error(`今日・明日予測データ取得エラー:`, error);
+      console.error(`週間予測データ取得エラー:`, error);
       setTodayPrediction(null);
       setTomorrowPrediction(null);
       throw error;
@@ -196,8 +216,8 @@ function AnalyticsPageComponent() {
     try {
       // baseUrlが空文字またはnullの場合は相対パスを使用
       const url = baseUrl
-        ? `${baseUrl}/api/predictions/weekly-average`
-        : "/api/predictions/weekly-average";
+        ? `${baseUrl}/api/predictions/weekly-averages`
+        : "/api/predictions/weekly-averages";
       console.log(`📊 週間平均データを取得中: ${url}`);
 
       const response = await safeFetch(url, 15000);

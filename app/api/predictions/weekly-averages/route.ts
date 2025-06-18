@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ML_BACKEND_URL = "https://real-time-seating-app-ml.vercel.app";
+const ML_BACKEND_URL = "http://localhost:8000";
 
 // CORSヘッダーを設定する関数
 const setCorsHeaders = () => ({
@@ -17,37 +17,12 @@ export async function OPTIONS() {
   });
 }
 
-// MLサーバーのレスポンスをフロントエンド形式に変換
-const transformTodayTomorrowResponse = (data: any) => {
-  const today = new Date();
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
-
-  return {
-    success: true,
-    data: {
-      today: {
-        date: today.toISOString().split("T")[0],
-        day_of_week: data.data.today.weekday_name,
-        occupancy_rate: data.data.today.occupancy_rate,
-        occupied_seats: data.data.today.occupied_seats,
-      },
-      tomorrow: {
-        date: tomorrow.toISOString().split("T")[0],
-        day_of_week: data.data.tomorrow.weekday_name,
-        occupancy_rate: data.data.tomorrow.occupancy_rate,
-        occupied_seats: data.data.tomorrow.occupied_seats,
-      },
-    },
-  };
-};
-
-// このAPIルートは削除予定 - フロントエンドから直接APIサーバーに接続
+// 週間平均データ取得API
 export async function GET(request: NextRequest) {
   try {
-    // MLバックエンドから今日・明日の予測データを取得
+    // MLバックエンドから週間平均データを取得
     const response = await fetch(
-      `${ML_BACKEND_URL}/api/predictions/today-tomorrow`,
+      `${ML_BACKEND_URL}/api/predictions/weekly-averages`,
       {
         method: "GET",
         headers: {
@@ -66,10 +41,8 @@ export async function GET(request: NextRequest) {
           errorMessage = `MLサーバーエラー: ${errorData.error}`;
         }
       } catch (parseError) {
-        // JSONパースエラーの場合はステータスコードのみ
         console.error("MLサーバーエラーレスポンスの解析に失敗:", parseError);
       }
-
       throw new Error(errorMessage);
     }
 
@@ -77,11 +50,8 @@ export async function GET(request: NextRequest) {
 
     // 成功レスポンスの場合
     if (data.success) {
-      // MLサーバーのレスポンスをフロントエンド形式に変換
-      const transformedData = transformTodayTomorrowResponse(data);
-
       // CORSヘッダーを追加してレスポンス
-      return NextResponse.json(transformedData, {
+      return NextResponse.json(data, {
         status: 200,
         headers: setCorsHeaders(),
       });
@@ -92,7 +62,7 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("今日・明日の予測データ取得エラー:", error);
+    console.error("週間平均データ取得エラー:", error);
 
     // エラーレスポンスを返す（ダミーデータなし）
     const errorResponse = {

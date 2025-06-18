@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ML_BACKEND_URL = "https://real-time-seating-app-ml.vercel.app";
+const ML_BACKEND_URL = "http://localhost:8000";
 
 // CORSヘッダーを設定する関数
 const setCorsHeaders = () => ({
@@ -9,20 +9,26 @@ const setCorsHeaders = () => ({
   "Access-Control-Allow-Headers": "Content-Type",
 });
 
-// このAPIルートは削除予定 - フロントエンドから直接APIサーバーに接続
+// OPTIONSメソッド（CORSプリフライト）
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: setCorsHeaders(),
+  });
+}
+
+// 週間予測データ取得API
 export async function GET(request: NextRequest) {
   try {
-    // MLバックエンドから週間平均データを取得
-    const response = await fetch(
-      `${ML_BACKEND_URL}/api/predictions/weekly-average`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // CORSエラーを回避するため、サーバーサイドでフェッチ
-      }
-    );
+    // MLバックエンドから週間予測データを取得
+    const response = await fetch(`${ML_BACKEND_URL}/api/predictions/weekly`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // サーバーサイドでフェッチしてCORSエラーを回避
+    });
+
     if (!response.ok) {
       // MLサーバーからのエラーレスポンスを取得
       let errorMessage = `MLサーバーエラー: ${response.status}`;
@@ -32,20 +38,18 @@ export async function GET(request: NextRequest) {
           errorMessage = `MLサーバーエラー: ${errorData.error}`;
         }
       } catch (parseError) {
-        // JSONパースエラーの場合はステータスコードのみ
         console.error("MLサーバーエラーレスポンスの解析に失敗:", parseError);
       }
+
       throw new Error(errorMessage);
     }
+
     const data = await response.json();
 
     // 成功レスポンスの場合
     if (data.success) {
-      // MLサーバーのレスポンスをフロントエンド形式に変換
-      const transformedData = transformWeeklyAverageResponse(data);
-
       // CORSヘッダーを追加してレスポンス
-      return NextResponse.json(transformedData, {
+      return NextResponse.json(data, {
         status: 200,
         headers: setCorsHeaders(),
       });
@@ -56,7 +60,7 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("週間平均データ取得エラー:", error);
+    console.error("週間予測データ取得エラー:", error);
 
     // エラーレスポンスを返す（ダミーデータなし）
     const errorResponse = {
@@ -74,26 +78,3 @@ export async function GET(request: NextRequest) {
     });
   }
 }
-
-// OPTIONSメソッド（CORSプリフライト）
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: setCorsHeaders(),
-  });
-}
-
-// MLサーバーのレスポンスをフロントエンド形式に変換
-const transformWeeklyAverageResponse = (data: any) => {
-  return {
-    success: true,
-    data: {
-      weekly_averages: data.data.weekly_averages.map((item: any) => ({
-        weekday: item.weekday,
-        weekday_name: item.weekday_name,
-        occupancy_rate: item.occupancy_rate,
-        occupied_seats: item.occupied_seats,
-      })),
-    },
-  };
-};

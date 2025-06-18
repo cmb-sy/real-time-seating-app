@@ -4,7 +4,6 @@ A real-time seat information system that helps users check seat availability ins
 
 <img width="709" alt="SS 2025-06-12 22 12 25" src="https://github.com/user-attachments/assets/7a978d82-661c-4ff6-a50d-b3cc0223a67d" />
 
-
 ## Features
 
 - Real-time seat availability monitoring
@@ -50,36 +49,40 @@ The frontend will automatically detect and connect to `http://localhost:8000/api
 
 The production API endpoints are served from the same domain as the frontend:
 
-- `/api/predictions/today-tomorrow`
-- `/api/predictions/weekly-average`
+- `/api/predictions/weekly`
+- `/api/predictions/weekly-averages`
 
 ### API Endpoints
 
-The application expects the following API endpoints:
+The application expects the following API endpoints according to the v3.0.0 API specification:
 
-1. **Today/Tomorrow Predictions**: `GET /api/predictions/today-tomorrow`
+1. **Weekly Predictions**: `GET /api/predictions/weekly`
 
    ```json
    {
      "success": true,
      "data": {
-       "today": {
-         "date": "2024-01-15",
-         "day_of_week": "月",
-         "occupancy_rate": 0.65,
-         "available_seats": 35
+       "day0": {
+         "date": "2025-06-18",
+         "weekday": 2,
+         "weekday_name": "水曜日",
+         "is_weekend": false,
+         "occupancy_rate": 0.5,
+         "occupied_seats": 4
        },
-       "tomorrow": {
-         "date": "2024-01-16",
-         "day_of_week": "火",
-         "occupancy_rate": 0.75,
-         "available_seats": 25
+       "day1": {
+         "date": "2025-06-19",
+         "weekday": 3,
+         "weekday_name": "木曜日",
+         "is_weekend": false,
+         "occupancy_rate": 0.49,
+         "occupied_seats": 4
        }
      }
    }
    ```
 
-2. **Weekly Averages**: `GET /api/predictions/weekly-average`
+2. **Weekly Averages**: `GET /api/predictions/weekly-averages`
    ```json
    {
      "success": true,
@@ -87,9 +90,9 @@ The application expects the following API endpoints:
        "weekly_averages": [
          {
            "weekday": 0,
-           "weekday_name": "月曜",
-           "occupancy_rate": 0.65,
-           "available_seats": 35
+           "weekday_name": "月曜日",
+           "occupancy_rate": 0.48,
+           "occupied_seats": 4
          }
        ]
      }
@@ -188,4 +191,5 @@ This application includes an automatic seat reset feature that runs daily at 21:
 The GitHub Actions workflow will automatically reset all seats daily at 21:00. You can also trigger the workflow manually from the Actions tab in your repository.
 
 ## Backend
+
 https://github.com/cmb-sy/real-time-seating-app-ML
