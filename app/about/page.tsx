@@ -200,7 +200,9 @@ export default function AboutPage() {
           <div className="mb-20">
             <div className="text-center mb-16">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <h2 className="text-4xl font-bold text-gray-900">利用者の声</h2>
+                <h2 className="text-4xl font-bold text-gray-900">
+                  利用者の声&次回実装予定の機能
+                </h2>
               </div>
             </div>
 
@@ -309,6 +311,34 @@ export default function AboutPage() {
                       </span>
                     </div>
                     <p className="text-blue-700 text-sm">わかりやした。</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ユーザーの声5 */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200 relative overflow-hidden">
+                <div className="absolute top-4 right-4 text-blue-200">
+                  <Quote className="h-12 w-12" />
+                </div>
+                <div className="relative">
+                  <div className="flex items-center gap-4 mb-6">
+                    <h3 className="font-bold text-gray-900 text-lg">
+                      志木の風来坊
+                    </h3>
+                  </div>
+                  <blockquote className="text-gray-700 text-lg leading-relaxed mb-4">
+                    加圧センサーを椅子に仕込んで、自動で出社して座っていると把握できるようにしてほしい。
+                  </blockquote>
+                  <div className="bg-blue-100 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lightbulb className="h-5 w-5 text-blue-600" />
+                      <span className="font-semibold text-blue-800">
+                        開発チームより
+                      </span>
+                    </div>
+                    <p className="text-blue-700 text-sm">
+                      ハードウェア買ってくれ
+                    </p>
                   </div>
                 </div>
               </div>
