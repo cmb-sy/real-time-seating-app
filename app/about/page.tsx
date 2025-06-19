@@ -212,22 +212,9 @@ export default function AboutPage() {
                 </div>
                 <div className="relative">
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      諸
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">
-                        諸刃の剣
-                      </h3>
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    <h3 className="font-bold text-gray-900 text-lg">
+                      諸刃の剣
+                    </h3>
                   </div>
                   <blockquote className="text-gray-700 text-lg leading-relaxed mb-4">
                     「ちょっと慣れてきたらプルダウンにして席の入力をより早くしたい。てかもう候補を出してほしい。」
@@ -247,42 +234,81 @@ export default function AboutPage() {
               </div>
 
               {/* ユーザーの声2 */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-200 relative overflow-hidden">
-                <div className="absolute top-4 right-4 text-green-200">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200 relative overflow-hidden">
+                <div className="absolute top-4 right-4 text-blue-200">
                   <Quote className="h-12 w-12" />
                 </div>
                 <div className="relative">
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      モ
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">
-                        モロッコ共和国
-                      </h3>
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    <h3 className="font-bold text-gray-900 text-lg">
+                      モロッコ共和国
+                    </h3>
                   </div>
                   <blockquote className="text-gray-700 text-lg leading-relaxed mb-4">
                     「会社で起きたちょっとおもろかったことをTwitterみたいにかけるスペースがホーム画面にほしい」
                   </blockquote>
-                  <div className="bg-green-100 rounded-lg p-4">
+                  <div className="bg-blue-100 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Lightbulb className="h-5 w-5 text-green-600" />
-                      <span className="font-semibold text-green-800">
+                      <Lightbulb className="h-5 w-5 text-blue-600" />
+                      <span className="font-semibold text-blue-800">
                         開発チームより
                       </span>
                     </div>
-                    <p className="text-green-700 text-sm">
+                    <p className="text-blue-700 text-sm">
                       検討に検討を重ね、検討を加速させていきます。
                     </p>
+                  </div>
+                </div>
+              </div>
+              {/* ユーザーの声3 */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200 relative overflow-hidden">
+                <div className="absolute top-4 right-4 text-blue-200">
+                  <Quote className="h-12 w-12" />
+                </div>
+                <div className="relative">
+                  <div className="flex items-center gap-4 mb-6">
+                    <h3 className="font-bold text-gray-900 text-lg">
+                      梅酒相対性理論
+                    </h3>
+                  </div>
+                  <blockquote className="text-gray-700 text-lg leading-relaxed mb-4">
+                    座席ごとの埋まっている確率があっても嬉しいかもと思いました。（この席は暗黙的に固定されているねーってことが分かりそう）
+                  </blockquote>
+                  <div className="bg-blue-100 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lightbulb className="h-5 w-5 text-blue-600" />
+                      <span className="font-semibold text-blue-800">
+                        開発チームより
+                      </span>
+                    </div>
+                    <p className="text-blue-700 text-sm">
+                      やれるときにやります。
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {/* ユーザーの声4 */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200 relative overflow-hidden">
+                <div className="absolute top-4 right-4 text-blue-200">
+                  <Quote className="h-12 w-12" />
+                </div>
+                <div className="relative">
+                  <div className="flex items-center gap-4 mb-6">
+                    <h3 className="font-bold text-gray-900 text-lg">
+                      沖縄そばは飲み物
+                    </h3>
+                  </div>
+                  <blockquote className="text-gray-700 text-lg leading-relaxed mb-4">
+                    バーチャルオフィス感もあって良いなと思いました。プルダウンで人を選択できるようになった先には、アバターみたいなものが座ると、よりバーチャルオフィス感が強まりそうです。
+                  </blockquote>
+                  <div className="bg-blue-100 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lightbulb className="h-5 w-5 text-blue-600" />
+                      <span className="font-semibold text-blue-800">
+                        開発チームより
+                      </span>
+                    </div>
+                    <p className="text-blue-700 text-sm">わかりやした。</p>
                   </div>
                 </div>
               </div>
