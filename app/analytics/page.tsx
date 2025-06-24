@@ -76,14 +76,7 @@ function AnalyticsPageComponent() {
       day: "numeric",
     });
 
-    const todayDayOfWeek = today.toLocaleDateString("ja-JP", {
-      weekday: "long",
-    });
-    const tomorrowDayOfWeek = tomorrow.toLocaleDateString("ja-JP", {
-      weekday: "long",
-    });
-
-    return { todayDate, tomorrowDate, todayDayOfWeek, tomorrowDayOfWeek };
+    return { todayDate, tomorrowDate };
   };
 
   // API接続確認とエンドポイント決定
@@ -163,29 +156,34 @@ function AnalyticsPageComponent() {
       console.log(`📅 週間予測APIレスポンス:`, data);
 
       if (data.success && data.data) {
-        // 今日と明日の日付を計算
+        // 今日と明日の曜日番号を計算（JavaScript標準: 0=日曜日, 1=月曜日...）
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
 
-        const todayDateString = today.toISOString().split("T")[0];
-        const tomorrowDateString = tomorrow.toISOString().split("T")[0];
+        const todayWeekday = today.getDay();
+        const tomorrowWeekday = tomorrow.getDay();
 
         // 週間データから今日と明日を抽出
         let todayData = null;
         let tomorrowData = null;
 
-        Object.values(data.data).forEach((dayData: any) => {
-          if (dayData.date === todayDateString) {
+        // data.dataが配列の場合の処理
+        const weeklyData = Array.isArray(data.data)
+          ? data.data
+          : Object.values(data.data);
+
+        weeklyData.forEach((dayData: any) => {
+          if (dayData.weekday === todayWeekday) {
             todayData = {
-              date: dayData.date,
+              date: today.toISOString().split("T")[0],
               day_of_week: dayData.weekday_name,
               occupancy_rate: dayData.occupancy_rate,
               occupied_seats: dayData.occupied_seats,
             };
-          } else if (dayData.date === tomorrowDateString) {
+          } else if (dayData.weekday === tomorrowWeekday) {
             tomorrowData = {
-              date: dayData.date,
+              date: tomorrow.toISOString().split("T")[0],
               day_of_week: dayData.weekday_name,
               occupancy_rate: dayData.occupancy_rate,
               occupied_seats: dayData.occupied_seats,
@@ -231,7 +229,11 @@ function AnalyticsPageComponent() {
 
       if (data.success && data.data) {
         // MLサーバーからの実データを使用（平日のみの場合が多い）
-        const sortedAverages = data.data.weekly_averages.sort(
+        // data.dataが配列かweekly_averagesプロパティを持つオブジェクトかを判定
+        const weeklyAverages = Array.isArray(data.data)
+          ? data.data
+          : data.data.weekly_averages;
+        const sortedAverages = weeklyAverages.sort(
           (a, b) => a.weekday - b.weekday
         );
         setWeeklyAverages(sortedAverages);
@@ -345,8 +347,7 @@ function AnalyticsPageComponent() {
     );
   }
 
-  const { todayDate, tomorrowDate, todayDayOfWeek, tomorrowDayOfWeek } =
-    getTodayTomorrowInfo();
+  const { todayDate, tomorrowDate } = getTodayTomorrowInfo();
 
   return (
     <>
@@ -392,7 +393,7 @@ function AnalyticsPageComponent() {
                   本日の予測
                 </CardTitle>
                 <p className="text-sm text-gray-400">
-                  {todayDate} ({todayPrediction?.day_of_week || todayDayOfWeek})
+                  {todayDate} ({todayPrediction?.day_of_week || "データなし"})
                 </p>
               </CardHeader>
               <CardContent className="p-6">
@@ -429,7 +430,7 @@ function AnalyticsPageComponent() {
                 </CardTitle>
                 <p className="text-sm text-gray-400">
                   {tomorrowDate} (
-                  {tomorrowPrediction?.day_of_week || tomorrowDayOfWeek})
+                  {tomorrowPrediction?.day_of_week || "データなし"})
                 </p>
               </CardHeader>
               <CardContent className="p-6">
