@@ -168,12 +168,13 @@ function AnalyticsPageComponent() {
         let todayData = null;
         let tomorrowData = null;
 
-        // data.dataが配列の場合の処理
-        const weeklyData = Array.isArray(data.data)
-          ? data.data
-          : Object.values(data.data);
+        // 週間予測データを取得（平日のみ）
+        const weeklyData = data.data.weekly_predictions || [];
+        const weekdayData = weeklyData.filter(
+          (dayData: any) => dayData.weekday >= 1 && dayData.weekday <= 5 // 月曜日〜金曜日のみ
+        );
 
-        weeklyData.forEach((dayData: any) => {
+        weekdayData.forEach((dayData: any) => {
           if (dayData.weekday === todayWeekday) {
             todayData = {
               date: today.toISOString().split("T")[0],
@@ -228,17 +229,18 @@ function AnalyticsPageComponent() {
       console.log(`📊 週間平均のAPIレスポンス:`, data);
 
       if (data.success && data.data) {
-        // MLサーバーからの実データを使用（平日のみの場合が多い）
-        // data.dataが配列かweekly_averagesプロパティを持つオブジェクトかを判定
-        const weeklyAverages = Array.isArray(data.data)
-          ? data.data
-          : data.data.weekly_averages;
-        const sortedAverages = weeklyAverages.sort(
+        // MLサーバーからの実データを使用（平日のみ表示）
+        const weeklyAverages = data.data.weekly_averages || [];
+        // 平日のみフィルタリング（月曜日〜金曜日）
+        const weekdayAverages = weeklyAverages.filter(
+          (item: any) => item.weekday >= 1 && item.weekday <= 5
+        );
+        const sortedAverages = weekdayAverages.sort(
           (a, b) => a.weekday - b.weekday
         );
         setWeeklyAverages(sortedAverages);
         console.log(
-          `✅ 週間平均データを取得しました（${sortedAverages.length}日分）`
+          `✅ 週間平均データを取得しました（平日${sortedAverages.length}日分）`
         );
         setErrorDetails(null);
       } else {
