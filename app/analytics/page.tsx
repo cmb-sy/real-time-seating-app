@@ -179,14 +179,14 @@ function AnalyticsPageComponent() {
             todayData = {
               date: today.toISOString().split("T")[0],
               day_of_week: dayData.weekday_name,
-              density_rate: dayData.occupancy_rate,
+              density_rate: dayData.density_rate,
               occupied_seats: dayData.occupied_seats,
             };
           } else if (dayData.weekday === tomorrowWeekday) {
             tomorrowData = {
               date: tomorrow.toISOString().split("T")[0],
               day_of_week: dayData.weekday_name,
-              density_rate: dayData.occupancy_rate,
+              density_rate: dayData.density_rate,
               occupied_seats: dayData.occupied_seats,
             };
           }
@@ -307,7 +307,7 @@ function AnalyticsPageComponent() {
     .map((item) => ({
       day: item.weekday_name.replace("曜日", "曜"),
       weekday: item.weekday,
-      occupancy_rate: item.density_rate * 100, // density_rateを使用
+      occupancy_rate: item.density_rate, // density_rateを使用（既にパーセント値）
       occupied_seats: item.occupied_seats,
     }));
 
@@ -413,7 +413,7 @@ function AnalyticsPageComponent() {
                     </div>
                     <div className="text-5xl font-bold text-black">
                       {todayPrediction?.density_rate !== undefined
-                        ? (todayPrediction.density_rate * 100).toFixed(1)
+                        ? todayPrediction.density_rate.toFixed(1)
                         : "-"}
                       <span className="text-xl text-gray-400">%</span>
                     </div>
@@ -455,7 +455,7 @@ function AnalyticsPageComponent() {
                     </div>
                     <div className="text-5xl font-bold text-black">
                       {tomorrowPrediction?.density_rate !== undefined
-                        ? (tomorrowPrediction.density_rate * 100).toFixed(1)
+                        ? tomorrowPrediction.density_rate.toFixed(1)
                         : "-"}
                       <span className="text-xl text-gray-400">%</span>
                     </div>
