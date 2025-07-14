@@ -36,20 +36,17 @@ jobs:
 
           # 占有されている座席数を計算
           OCCUPIED_COUNT=$(echo "$SEATS_RESPONSE" | jq '[.[] | select(.is_occupied == true)] | length')
-          # 総座席数は8席固定
-          TOTAL_SEATS=8
-          DENSITY_RATE=$(echo "scale=2; $OCCUPIED_COUNT * 100 / $TOTAL_SEATS" | bc)
 
-          echo "占有座席数: $OCCUPIED_COUNT / $TOTAL_SEATS"
-          echo "密度率: $DENSITY_RATE%"
-
-          # 現在の密度率を設定テーブルに保存
-          curl -s -X PATCH \
-            "${SUPABASE_URL}/rest/v1/settings?key=eq.density" \
+          # プルダウンで選択された社内人口密度率を取得
+          DENSITY_RESPONSE=$(curl -s -X GET \
+            "${SUPABASE_URL}/rest/v1/settings?key=eq.density&select=value" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json" \
-            -d "{\"value\": $DENSITY_RATE}"
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}")
+
+          DENSITY_RATE=$(echo "$DENSITY_RESPONSE" | jq -r '.[0].value // 0')
+
+          echo "占有座席数: $OCCUPIED_COUNT"
+          echo "社内人口密度率: $DENSITY_RATE%（プルダウン選択値）"
 
           # 現在の曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
           DAY_OF_WEEK=$(date +%w)
