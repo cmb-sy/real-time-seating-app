@@ -20,14 +20,14 @@ import { getApiConfig, checkApiAvailability } from "@/lib/api-config";
 interface TodayTomorrowPrediction {
   date: string;
   day_of_week: string;
-  occupancy_rate: number;
+  density_rate: number;
   occupied_seats: number;
 }
 
 interface WeeklyAverageItem {
   weekday: number;
   weekday_name: string;
-  occupancy_rate: number;
+  density_rate: number;
   occupied_seats: number;
 }
 
@@ -179,14 +179,14 @@ function AnalyticsPageComponent() {
             todayData = {
               date: today.toISOString().split("T")[0],
               day_of_week: dayData.weekday_name,
-              occupancy_rate: dayData.occupancy_rate,
+              density_rate: dayData.occupancy_rate,
               occupied_seats: dayData.occupied_seats,
             };
           } else if (dayData.weekday === tomorrowWeekday) {
             tomorrowData = {
               date: tomorrow.toISOString().split("T")[0],
               day_of_week: dayData.weekday_name,
-              occupancy_rate: dayData.occupancy_rate,
+              density_rate: dayData.occupancy_rate,
               occupied_seats: dayData.occupied_seats,
             };
           }
@@ -307,7 +307,7 @@ function AnalyticsPageComponent() {
     .map((item) => ({
       day: item.weekday_name.replace("曜日", "曜"),
       weekday: item.weekday,
-      occupancy_rate: item.occupancy_rate * 100,
+      occupancy_rate: item.density_rate * 100, // density_rateを使用
       occupied_seats: item.occupied_seats,
     }));
 
@@ -412,8 +412,8 @@ function AnalyticsPageComponent() {
                       社内人口密度率
                     </div>
                     <div className="text-5xl font-bold text-black">
-                      {todayPrediction?.occupancy_rate !== undefined
-                        ? (todayPrediction.occupancy_rate * 100).toFixed(1)
+                      {todayPrediction?.density_rate !== undefined
+                        ? (todayPrediction.density_rate * 100).toFixed(1)
                         : "-"}
                       <span className="text-xl text-gray-400">%</span>
                     </div>
@@ -454,8 +454,8 @@ function AnalyticsPageComponent() {
                       社内人口密度率
                     </div>
                     <div className="text-5xl font-bold text-black">
-                      {tomorrowPrediction?.occupancy_rate !== undefined
-                        ? (tomorrowPrediction.occupancy_rate * 100).toFixed(1)
+                      {tomorrowPrediction?.density_rate !== undefined
+                        ? (tomorrowPrediction.density_rate * 100).toFixed(1)
                         : "-"}
                       <span className="text-xl text-gray-400">%</span>
                     </div>
