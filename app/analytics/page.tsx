@@ -156,25 +156,33 @@ function AnalyticsPageComponent() {
       console.log(`📅 週間予測APIレスポンス:`, data);
 
       if (data.success && data.data) {
-        // 今日と明日の曜日番号を計算（JavaScript標準: 0=日曜日, 1=月曜日...）
+        // 今日と明日の曜日番号を計算
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
 
+        // JavaScript の getDay() と API の weekday は同じ形式
+        // 0=日曜日, 1=月曜日, 2=火曜日...6=土曜日
         const todayWeekday = today.getDay();
         const tomorrowWeekday = tomorrow.getDay();
+
+        console.log(
+          `📅 今日の曜日: ${todayWeekday}, 明日の曜日: ${tomorrowWeekday}`
+        );
 
         // 週間データから今日と明日を抽出
         let todayData = null;
         let tomorrowData = null;
 
-        // 週間予測データを取得（平日のみ）
+        // 週間予測データを取得
         const weeklyData = data.data.weekly_predictions || [];
-        const weekdayData = weeklyData.filter(
-          (dayData: any) => dayData.weekday >= 1 && dayData.weekday <= 5 // 月曜日〜金曜日のみ
-        );
+        console.log(`📅 週間予測データ:`, weeklyData);
 
-        weekdayData.forEach((dayData: any) => {
+        // 今日と明日のデータを探す（平日・土日問わず）
+        weeklyData.forEach((dayData: any) => {
+          console.log(
+            `📅 比較中: dayData.weekday=${dayData.weekday}, today=${todayWeekday}, tomorrow=${tomorrowWeekday}`
+          );
           if (dayData.weekday === todayWeekday) {
             todayData = {
               date: today.toISOString().split("T")[0],
@@ -182,6 +190,7 @@ function AnalyticsPageComponent() {
               density_rate: dayData.density_rate,
               occupied_seats: dayData.occupied_seats,
             };
+            console.log(`📅 今日のデータを設定:`, todayData);
           } else if (dayData.weekday === tomorrowWeekday) {
             tomorrowData = {
               date: tomorrow.toISOString().split("T")[0],
@@ -189,12 +198,28 @@ function AnalyticsPageComponent() {
               density_rate: dayData.density_rate,
               occupied_seats: dayData.occupied_seats,
             };
+            console.log(`📅 明日のデータを設定:`, tomorrowData);
           }
         });
 
         setTodayPrediction(todayData);
         setTomorrowPrediction(tomorrowData);
+
         console.log(`✅ 今日・明日の予測データを取得しました`);
+        console.log(`📅 今日のデータ:`, todayData);
+        console.log(`📅 明日のデータ:`, tomorrowData);
+
+        // 土日の場合の説明メッセージ
+        if (!todayData && (today.getDay() === 0 || today.getDay() === 6)) {
+          console.log(`📅 今日は土日のため予測データがありません`);
+        }
+        if (
+          !tomorrowData &&
+          (tomorrow.getDay() === 0 || tomorrow.getDay() === 6)
+        ) {
+          console.log(`📅 明日は土日のため予測データがありません`);
+        }
+
         setErrorDetails(null);
       } else {
         console.error("週間予測データの取得失敗:", data.error);
