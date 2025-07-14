@@ -48,33 +48,41 @@ jobs:
           echo "占有座席数: $OCCUPIED_COUNT"
           echo "社内人口密度率: $DENSITY_RATE%（プルダウン選択値）"
 
-          # 現在の曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
+          # 現在の曜日を取得（1: 月曜日, 2: 火曜日, ..., 5: 金曜日のみ記録）
           DAY_OF_WEEK=$(date +%w)
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # 密度履歴テーブルに記録
-          INSERT_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
-            "${SUPABASE_URL}/rest/v1/density_history" \
-            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"day_of_week\": $DAY_OF_WEEK,
-              \"density_rate\": $DENSITY_RATE,
-              \"occupied_seats\": $OCCUPIED_COUNT,
-              \"created_at\": \"$TIMESTAMP\"
-            }")
-
-          # レスポンスの解析
-          HTTP_CODE=$(echo "$INSERT_RESPONSE" | grep "HTTP_CODE" | cut -d: -f2)
-          RESPONSE_BODY=$(echo "$INSERT_RESPONSE" | sed '/HTTP_CODE/d')
-
-          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ 密度履歴の記録が成功しました"
+          # 土日（0: 日曜日, 6: 土曜日）の場合は記録をスキップ
+          if [ "$DAY_OF_WEEK" -eq 0 ] || [ "$DAY_OF_WEEK" -eq 6 ]; then
+            echo "⏭️ 土日のため、データベースへの記録をスキップします（曜日: $DAY_OF_WEEK）"
+          # 席数または密度率が0の場合は記録をスキップ
+          elif [ "$OCCUPIED_COUNT" -eq 0 ] || [ "$DENSITY_RATE" = "0" ] || [ "$DENSITY_RATE" = "0.00" ]; then
+            echo "⏭️ 席数(${OCCUPIED_COUNT})または密度率(${DENSITY_RATE}%)が0のため、データベースへの記録をスキップします"
           else
-            echo "⚠️ 密度履歴の記録でエラーが発生しました"
-            echo "HTTP Status: $HTTP_CODE"
-            echo "Response: $RESPONSE_BODY"
+            # 密度履歴テーブルに記録
+            INSERT_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
+              "${SUPABASE_URL}/rest/v1/density_history" \
+              -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"day_of_week\": $DAY_OF_WEEK,
+                \"density_rate\": $DENSITY_RATE,
+                \"occupied_seats\": $OCCUPIED_COUNT,
+                \"created_at\": \"$TIMESTAMP\"
+              }")
+
+            # レスポンスの解析
+            HTTP_CODE=$(echo "$INSERT_RESPONSE" | grep "HTTP_CODE" | cut -d: -f2)
+            RESPONSE_BODY=$(echo "$INSERT_RESPONSE" | sed '/HTTP_CODE/d')
+
+            if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ 密度履歴の記録が成功しました"
+            else
+              echo "⚠️ 密度履歴の記録でエラーが発生しました"
+              echo "HTTP Status: $HTTP_CODE"
+              echo "Response: $RESPONSE_BODY"
+            fi
           fi
 
           echo "✅ 密度データの記録が完了しました（密度率: ${DENSITY_RATE}%）"
