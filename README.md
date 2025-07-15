@@ -24,9 +24,6 @@ This application includes intelligent API endpoint detection that automatically 
 1. **Local Development Priority**: When running the analytics page, the app first tries to connect to the local backend server at `http://localhost:8000`
 2. **Automatic Fallback**: If the local server is not available, it automatically falls back to the production API endpoints
 3. **Visual Status Indicator**: The header shows the current connection status:
-   - 🟢 **ローカル接続** (Local Connection): Connected to local development server
-   - 🔵 **本番接続** (Production Connection): Connected to production server
-   - 🔴 **接続失敗** (Connection Failed): No servers available
 4. **Manual Toggle**: Users can manually switch between local and production endpoints using the toggle button
 
 ### Backend Server Setup
